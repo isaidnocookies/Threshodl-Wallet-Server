@@ -1,0 +1,59 @@
+import { CryptoAPI, Network } from "./CryptoAPI";
+
+class ZCashAPI extends CryptoAPI {
+    
+    network: Network;
+    zcashcore: any = require('zcash-bitcore-lib');
+
+    createWallet(chainType : Network, seed : string) {
+        var newPrivateKey: any;
+        var newWif: string;
+        var newAddress: string;
+        var fromSeed: boolean;
+        var network: any;
+        var success: boolean = true;
+
+        if (chainType == Network.Mainnet) {
+            network = this.zcashcore.Networks.Mainnet;
+        } else if (chainType == Network.Testnet) {
+            network = this.zcashcore.Networks.Testnet;
+        } else if (chainType == Network.Regtest) {
+            network = this.zcashcore.Networks.Regtest;
+        } else {
+            success = false;
+        }
+
+        if(seed && success) {
+            var theSeedValue = Buffer.from(seed)
+            var hash = this.zcashcore.crypto.Hash.sha256(theSeedValue);
+            var bn = this.zcashcore.crypto.BN.fromBuffer(hash);
+
+            newPrivateKey = new this.zcashcore.PrivateKey(bn);
+            fromSeed = true;
+        } else if (success) {
+            newPrivateKey = new this.zcashcore.PrivateKey.fromRandom(network);
+            fromSeed = false;
+        }
+
+        if (success) {
+            newWif = newPrivateKey.toWIF();
+            newAddress = newPrivateKey.toAddress(this.zcashcore.Networks.testnet).toString();
+        }
+
+        if (!newPrivateKey || !newWif || !newAddress) {
+            newPrivateKey = "";
+            newWif = "";
+            newAddress = "";
+            fromSeed = false;
+        }
+
+        this.zcashcore = null;
+        return ({"address" : newAddress, "privateKey": newPrivateKey, "wif": newWif, "fromSeed": fromSeed});
+    }
+
+    getBalance(chainType: Network, address : string) {
+        return "";
+    }
+}
+
+export { ZCashAPI, Network };

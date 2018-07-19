@@ -1,0 +1,33 @@
+{
+  "name": "wallet-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node ./lib/server.ts",
+    "start": "node ./dist/server.js",
+    "prod": "npm run build && npm start"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/express": "^4.16.0",
+    "bitcore-lib": "^0.15.0",
+    "bitcore-message": "^1.0.4",
+    "bitcore-mnemonic": "^1.5.0",
+    "body-parser": "^1.18.3",
+    "cluster": "^0.7.7",
+    "dashcore-lib": "^8.2.3",
+    "express": "^4.16.3",
+    "litecore-lib": "^0.13.22",
+    "pg": "^7.4.3",
+    "pg-hstore": "^2.3.2",
+    "sequelize": "^4.38.0",
+    "zcash-bitcore-lib": "^0.13.20-rc3"
+  },
+  "devDependencies": {
+    "@types/sequelize": "^4.27.23"
+  }
+}
