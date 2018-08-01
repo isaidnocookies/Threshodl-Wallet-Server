@@ -1,10 +1,13 @@
 import { CryptoAPI, Network } from "./CryptoAPI";
+import { Config } from "../config/config";
 
 class BitcoinAPI extends CryptoAPI {
     
+    coin: string = "BTC";
     network: Network;
     bitcoreMnemonic: any = require('bitcore-mnemonic');
     bitcore: any = this.bitcoreMnemonic.bitcore;
+    config : any = new Config();
 
     createWallet(chainType : Network, seed : string) {
         var newPrivateKey: any;
@@ -54,6 +57,26 @@ class BitcoinAPI extends CryptoAPI {
 
     getBalance(chainType: Network, address : string) {
         return "";
+    }
+
+    getUnspentTransactions(address : string, amount : string) {
+        return this.getUnspentTransactionsInternal(address, amount, 3);
+    }
+
+    getUnspentTransactionsInternal(address : string, amount : string, attempts : number) {
+        const axios = require('axios');
+        return axios({
+            method:'get',
+            url:this.config.insightServers.btc.host + '/addr/' + address + "/utxo",
+            responseType:'application/json'
+        }).then(function(response) {
+            return response.data;
+        }).catch(error => {
+            if (attempts > 0){
+                return this.getUnspentTransactionsInternal(address, amount, --attempts);
+            }
+            return null;
+        });
     }
 
     getTransactionFee(chainType: Network, inputs: number, outputs: number): string {

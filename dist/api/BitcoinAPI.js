@@ -2,11 +2,14 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const CryptoAPI_1 = require("./CryptoAPI");
 exports.Network = CryptoAPI_1.Network;
+const config_1 = require("../config/config");
 class BitcoinAPI extends CryptoAPI_1.CryptoAPI {
     constructor() {
         super(...arguments);
+        this.coin = "BTC";
         this.bitcoreMnemonic = require('bitcore-mnemonic');
         this.bitcore = this.bitcoreMnemonic.bitcore;
+        this.config = new config_1.Config();
     }
     createWallet(chainType, seed) {
         var newPrivateKey;
@@ -53,6 +56,24 @@ class BitcoinAPI extends CryptoAPI_1.CryptoAPI {
     }
     getBalance(chainType, address) {
         return "";
+    }
+    getUnspentTransactions(address, amount) {
+        return this.getUnspentTransactionsInternal(address, amount, 3);
+    }
+    getUnspentTransactionsInternal(address, amount, attempts) {
+        const axios = require('axios');
+        return axios({
+            method: 'get',
+            url: this.config.insightServers.btc.host + '/addr/' + address + "/utxo",
+            responseType: 'application/json'
+        }).then(function (response) {
+            return response.data;
+        }).catch(error => {
+            if (attempts > 0) {
+                return this.getUnspentTransactionsInternal(address, amount, --attempts);
+            }
+            return null;
+        });
     }
     getTransactionFee(chainType, inputs, outputs) {
         throw new Error("Method not implemented.");

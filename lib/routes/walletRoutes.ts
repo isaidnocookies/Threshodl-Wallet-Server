@@ -46,5 +46,36 @@ export class WalletRoutes {
             }
             res.status(200).send(JSON.stringify({success: true, message: newWallets}));
         });
+
+        app.post('/wallets/utxos/', (req: Request, res: Response) => {
+            var address : string = req.body.address;
+            var amount : string =  req.body.amount;
+            var coin : string = req.body.coin;
+
+            let api : CryptoAPI;
+
+            switch(coin) {
+                case 'BTC': api = new BitcoinAPI; break;
+                case 'LTC': api = new LitecoinAPI; break;
+                case 'DASH': api = new DashAPI; break;
+                case 'ZEC': api = new ZCashAPI; break;
+                case 'DOGE': api = new DogecoinAPI; break;
+                default:
+                    res.status(401).send(JSON.stringify({success: false}));
+                    return;
+            }
+
+            return api.getUnspentTransactions(address, amount).then(utxos => {
+                if (utxos) {
+                    res.status(200).send(JSON.stringify({success: true, response: JSON.stringify(utxos)}));
+                } else {
+                    res.status(400).send(JSON.stringify({success: false}));
+                }
+            });
+        });
+
+        app.post('/wallets/testing/', (req: Request, res: Response) => {
+            res.status(200).send(JSON.stringify({success: true, response: "testing.."}));
+        });
     }
 }

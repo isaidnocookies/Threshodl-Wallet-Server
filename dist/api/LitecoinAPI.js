@@ -53,6 +53,9 @@ class LitecoinAPI extends CryptoAPI_1.CryptoAPI {
     getBalance(chainType, address) {
         return "";
     }
+    getUnspentTransactions(address, amount) {
+        throw new Error("Method not implemented.");
+    }
     getTransactionFee(chainType, inputs, outputs) {
         throw new Error("Method not implemented.");
     }

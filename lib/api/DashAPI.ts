@@ -55,6 +55,10 @@ class DashAPI extends CryptoAPI {
         return "";
     }
 
+    getUnspentTransactions(address: string, amount: string) {
+        throw new Error("Method not implemented.");
+    }
+
     getTransactionFee(chainType: Network, inputs: number, outputs: number): string {
         throw new Error("Method not implemented.");
     }

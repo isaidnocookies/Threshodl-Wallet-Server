@@ -12,6 +12,7 @@ abstract class CryptoAPI {
     abstract getBalance(chainType : Network, address : string) : any;
     abstract getTransactionFee(chainType : Network, inputs : number, outputs : number) : any;
     abstract send(chainType : Network, fromAddresses : string[], fromPrivateKeys : string[], toAddresses : string[], toAmounts : string[]) : any;
+    abstract getUnspentTransactions(address : string, amount : string) : any;
 }
 
 export { CryptoAPI, Network };

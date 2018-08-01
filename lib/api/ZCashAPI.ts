@@ -1,7 +1,7 @@
 import { CryptoAPI, Network } from "./CryptoAPI";
 
 class ZCashAPI extends CryptoAPI {
-    
+
     network: Network;
     zcashcore: any = require('zcash-bitcore-lib');
 
@@ -53,6 +53,10 @@ class ZCashAPI extends CryptoAPI {
 
     getBalance(chainType: Network, address : string) {
         return "";
+    }
+
+    getUnspentTransactions(address: string, amount: string) {
+        throw new Error("Method not implemented.");
     }
 
     getTransactionFee(chainType: Network, inputs: number, outputs: number): string {
