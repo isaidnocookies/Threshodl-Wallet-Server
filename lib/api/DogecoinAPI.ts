@@ -14,6 +14,7 @@ class DogecoinAPI extends CryptoAPI {
     }
 
     getUnspentTransactions(address: string, amount: string) {
+        //https://dogechain.info/api/blockchain_api
         throw new Error("Method not implemented.");
     }
 

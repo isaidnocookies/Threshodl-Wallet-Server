@@ -1,10 +1,6 @@
 export class Config
 {
     nodes : any = {
-        exchange: {
-            host: '',
-            token: 'this-will-be-the-coin-server-token'
-        },
         bch:{
             host: "http://cash:388a74f00eb5a0064b57c5c048ccbb85@18.144.60.209:18332",
         },
@@ -39,22 +35,29 @@ export class Config
 
     insightServers = {
         bch:{
-            host: "",
+            host: "https://bch-insight.bitpay.com/api",
+            test: "",
         },
         btc:{
             host: "https://insight.bitpay.com/api",
+            test: "",
         },
         dash:{
-            host: "",
+            host: "https://insight.dash.org/insight-api",
+            test: "",
         },
         ltc:{
-            host: "",
+            host: "https://insight.litecore.io/api",
+            test: "",
         },
         zec:{
-            host: "",
+            host: "https://zcashnetwork.info/api",
+            test: "",
         },
         doge:{
-            host: "",
+            // https://dogechain.info/api/blockchain_api
+            host: "https://dogechain.info/api/v1",
+            test: "",
         }
     }
 
@@ -67,10 +70,10 @@ export class Config
     confirmations = {
         btc: 2, //Confirmations needed for change from pending to success transaction.
         bch: 2,
-        dash: 10,
+        dash: 5,
         ltc: 2,
         zec: 2,
-        eth: 10,
+        eth: 5,
         doge: 2
     }
 }
