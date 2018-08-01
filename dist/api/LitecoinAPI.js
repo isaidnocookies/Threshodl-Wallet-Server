@@ -2,11 +2,10 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const CryptoAPI_1 = require("./CryptoAPI");
 exports.Network = CryptoAPI_1.Network;
-class BitcoinAPI extends CryptoAPI_1.CryptoAPI {
+class LitecoinAPI extends CryptoAPI_1.CryptoAPI {
     constructor() {
         super(...arguments);
-        this.bitcoreMnemonic = require('bitcore-mnemonic');
-        this.bitcore = this.bitcoreMnemonic.bitcore;
+        this.litecore = require('litecore-lib');
     }
     createWallet(chainType, seed) {
         var newPrivateKey;
@@ -16,31 +15,31 @@ class BitcoinAPI extends CryptoAPI_1.CryptoAPI {
         var network;
         var success = true;
         if (chainType == CryptoAPI_1.Network.Mainnet) {
-            network = this.bitcore.Networks.Mainnet;
+            network = this.litecore.Networks.Mainnet;
         }
         else if (chainType == CryptoAPI_1.Network.Testnet) {
-            network = this.bitcore.Networks.Testnet;
+            network = this.litecore.Networks.Testnet;
         }
         else if (chainType == CryptoAPI_1.Network.Regtest) {
-            network = this.bitcore.Networks.Regtest;
+            network = this.litecore.Networks.Regtest;
         }
         else {
             success = false;
         }
         if (seed && success) {
             var theSeedValue = Buffer.from(seed);
-            var hash = this.bitcore.crypto.Hash.sha256(theSeedValue);
-            var bn = this.bitcore.crypto.BN.fromBuffer(hash);
-            newPrivateKey = new this.bitcore.PrivateKey(bn);
+            var hash = this.litecore.crypto.Hash.sha256(theSeedValue);
+            var bn = this.litecore.crypto.BN.fromBuffer(hash);
+            newPrivateKey = new this.litecore.PrivateKey(bn);
             fromSeed = true;
         }
         else if (success) {
-            newPrivateKey = new this.bitcore.PrivateKey.fromRandom(network);
+            newPrivateKey = new this.litecore.PrivateKey.fromRandom(network);
             fromSeed = false;
         }
         if (success) {
             newWif = newPrivateKey.toWIF();
-            newAddress = newPrivateKey.toAddress(this.bitcore.Networks.testnet).toString();
+            newAddress = newPrivateKey.toAddress(this.litecore.Networks.testnet).toString();
         }
         if (!newPrivateKey || !newWif || !newAddress) {
             newPrivateKey = "";
@@ -48,7 +47,7 @@ class BitcoinAPI extends CryptoAPI_1.CryptoAPI {
             newAddress = "";
             fromSeed = false;
         }
-        this.bitcore = null;
+        this.litecore = null;
         return ({ "address": newAddress, "privateKey": newPrivateKey, "wif": newWif, "fromSeed": fromSeed });
     }
     getBalance(chainType, address) {
@@ -61,5 +60,5 @@ class BitcoinAPI extends CryptoAPI_1.CryptoAPI {
         throw new Error("Method not implemented.");
     }
 }
-exports.BitcoinAPI = BitcoinAPI;
-//# sourceMappingURL=BitcoinAPI.js.map
+exports.LitecoinAPI = LitecoinAPI;
+//# sourceMappingURL=LitecoinAPI.js.map

@@ -22,4 +22,6 @@ class App {
     }
 }
 exports.default = new App().app;
+//npm run build
+//rpm start dev
 //# sourceMappingURL=app.js.map

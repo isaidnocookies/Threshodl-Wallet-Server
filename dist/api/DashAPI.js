@@ -2,11 +2,10 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const CryptoAPI_1 = require("./CryptoAPI");
 exports.Network = CryptoAPI_1.Network;
-class BitcoinAPI extends CryptoAPI_1.CryptoAPI {
+class DashAPI extends CryptoAPI_1.CryptoAPI {
     constructor() {
         super(...arguments);
-        this.bitcoreMnemonic = require('bitcore-mnemonic');
-        this.bitcore = this.bitcoreMnemonic.bitcore;
+        this.dashcore = require('dashcore-lib');
     }
     createWallet(chainType, seed) {
         var newPrivateKey;
@@ -16,31 +15,31 @@ class BitcoinAPI extends CryptoAPI_1.CryptoAPI {
         var network;
         var success = true;
         if (chainType == CryptoAPI_1.Network.Mainnet) {
-            network = this.bitcore.Networks.Mainnet;
+            network = this.dashcore.Networks.Mainnet;
         }
         else if (chainType == CryptoAPI_1.Network.Testnet) {
-            network = this.bitcore.Networks.Testnet;
+            network = this.dashcore.Networks.Testnet;
         }
         else if (chainType == CryptoAPI_1.Network.Regtest) {
-            network = this.bitcore.Networks.Regtest;
+            network = this.dashcore.Networks.Regtest;
         }
         else {
             success = false;
         }
         if (seed && success) {
             var theSeedValue = Buffer.from(seed);
-            var hash = this.bitcore.crypto.Hash.sha256(theSeedValue);
-            var bn = this.bitcore.crypto.BN.fromBuffer(hash);
-            newPrivateKey = new this.bitcore.PrivateKey(bn);
+            var hash = this.dashcore.crypto.Hash.sha256(theSeedValue);
+            var bn = this.dashcore.crypto.BN.fromBuffer(hash);
+            newPrivateKey = new this.dashcore.PrivateKey(bn);
             fromSeed = true;
         }
         else if (success) {
-            newPrivateKey = new this.bitcore.PrivateKey.fromRandom(network);
+            newPrivateKey = new this.dashcore.PrivateKey.fromRandom(network);
             fromSeed = false;
         }
         if (success) {
             newWif = newPrivateKey.toWIF();
-            newAddress = newPrivateKey.toAddress(this.bitcore.Networks.testnet).toString();
+            newAddress = newPrivateKey.toAddress(this.dashcore.Networks.testnet).toString();
         }
         if (!newPrivateKey || !newWif || !newAddress) {
             newPrivateKey = "";
@@ -48,7 +47,7 @@ class BitcoinAPI extends CryptoAPI_1.CryptoAPI {
             newAddress = "";
             fromSeed = false;
         }
-        this.bitcore = null;
+        this.dashcore = null;
         return ({ "address": newAddress, "privateKey": newPrivateKey, "wif": newWif, "fromSeed": fromSeed });
     }
     getBalance(chainType, address) {
@@ -61,5 +60,5 @@ class BitcoinAPI extends CryptoAPI_1.CryptoAPI {
         throw new Error("Method not implemented.");
     }
 }
-exports.BitcoinAPI = BitcoinAPI;
-//# sourceMappingURL=BitcoinAPI.js.map
+exports.DashAPI = DashAPI;
+//# sourceMappingURL=DashAPI.js.map

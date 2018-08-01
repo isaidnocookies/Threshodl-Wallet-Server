@@ -4,6 +4,7 @@ import * as bodyParser from "body-parser";
 import { Routes } from "./routes/routes";
 import { UserAccountRoutes } from "./routes/userAccountRoutes";
 import { WalletRoutes } from "./routes/walletRoutes";
+import { DarkRoutes } from "./routes/darkRoutes";
 
 class App {
     public app: express.Application;
@@ -28,3 +29,6 @@ class App {
 }
 
 export default new App().app;
+
+//npm run build
+//rpm start dev

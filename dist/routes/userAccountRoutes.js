@@ -4,17 +4,23 @@ const UserAccount_1 = require("../api/UserAccount");
 class UserAccountRoutes {
     routes(app) {
         app.route('/userAccount/').get((req, res) => {
-            res.status(200).send({ message: "User account api ping" });
+            res.status(200).send({ message: "User account says, hello world!" });
         });
-        app.post('/userAccount/signMessage', (req, res) => {
-            // let userAccountApi : UserAccount = new UserAccount;
-            // var message : string = req.body.message;
-            // var privateKey : string = req.body.privateKey;
-            // var signature : any = userAccountApi.signMessage(privateKey, message);
-            // userAccountApi = null;
+        app.post('/userAccount/create/', (req, res) => {
+            var userAccount = new UserAccount_1.UserAccount;
+            // Validate Username
+            // TODO:
+            // Create Seed
+            var seed = userAccount.createMnemonicWords();
+            // Create Private Key and Public Key
+            // Return useraccount information
+            res.send(JSON.stringify({ success: false, username: "", seed: seed }));
+        });
+        app.post('/userAccount/signMessage/', (req, res) => {
+            // TODO...
             res.send(JSON.stringify({ success: false, signature: "" }));
         });
-        app.post('/userAccount/mnemonicSeed', (req, res) => {
+        app.post('/userAccount/mnemonicSeed/', (req, res) => {
             let userAccountApi = new UserAccount_1.UserAccount;
             var seed = userAccountApi.createMnemonicWords();
             userAccountApi = null;

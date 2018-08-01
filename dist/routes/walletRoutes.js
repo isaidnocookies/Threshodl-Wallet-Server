@@ -1,6 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const BitcoinAPI_1 = require("../api/BitcoinAPI");
+const ZCashAPI_1 = require("../api/ZCashAPI");
+const LitecoinAPI_1 = require("../api/LitecoinAPI");
+const DashAPI_1 = require("../api/DashAPI");
+const DogecoinAPI_1 = require("../api/DogecoinAPI");
 class WalletRoutes {
     routes(app) {
         app.route('/wallets/').get((req, res) => {
@@ -22,11 +26,18 @@ class WalletRoutes {
                         case 'BTC':
                             api = new BitcoinAPI_1.BitcoinAPI;
                             break;
-                        // case 'LTC': api = new LitecoinAPI; break;
-                        // case 'DASH': api = new DashAPI; break;
-                        // case 'ZEC': api = new ZecAPI; break;
-                        // case 'ETH': api = new EthAPI; break;
-                        // case 'DOGE': api = new DogeAPI; break;
+                        case 'LTC':
+                            api = new LitecoinAPI_1.LitecoinAPI;
+                            break;
+                        case 'DASH':
+                            api = new DashAPI_1.DashAPI;
+                            break;
+                        case 'ZEC':
+                            api = new ZCashAPI_1.ZCashAPI;
+                            break;
+                        case 'DOGE':
+                            api = new DogecoinAPI_1.DogecoinAPI;
+                            break;
                         default:
                             newWallets[coin] = { "address": "", "privateKey": "", "wif": "", "fromSeed": false };
                             continue;

@@ -2,18 +2,23 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 class UserAccount {
     createMnemonicWords() {
-        // Workaround for multiple instances of bitcore-lib
-        delete global["_bitcore"];
         let Mnemonic = require('bitcore-mnemonic');
         var code = new Mnemonic(Mnemonic.Words.ENGLISH);
         var codeString = code.toString();
-        Mnemonic = null;
         return codeString;
     }
-    signMessage(wif, message) {
-        return "";
+    createAccount() {
+        throw new Error("Method not implemented.");
     }
-    ;
+    checkUsername() {
+        throw new Error("Method not implemented.");
+    }
+    changeUsername(publicKey, newUsername) {
+        throw new Error("Method not implemented.");
+    }
+    getUsername(publicKey) {
+        throw new Error("Method not implemented.");
+    }
 }
 exports.UserAccount = UserAccount;
 //# sourceMappingURL=UserAccount.js.map

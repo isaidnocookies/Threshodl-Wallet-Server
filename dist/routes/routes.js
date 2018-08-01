@@ -7,7 +7,7 @@ class Routes {
         });
         app.post('/', (req, res) => {
             const data = req.body.data;
-            res.status(200).send("Hello, world " + data);
+            res.status(200).send({ message: "Hello, world " + data });
         });
     }
 }

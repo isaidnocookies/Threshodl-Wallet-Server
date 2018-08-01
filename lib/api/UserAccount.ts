@@ -6,6 +6,22 @@ class UserAccount {
 
         return codeString;
     }
+
+    createAccount() {
+        throw new Error("Method not implemented.");
+    }
+
+    checkUsername() {
+        throw new Error("Method not implemented.");
+    }
+
+    changeUsername(publicKey : string, newUsername : string) {
+        throw new Error("Method not implemented.");
+    }
+
+    getUsername(publicKey : string) {
+        throw new Error("Method not implemented.");
+    }
 }
 
 export { UserAccount };
