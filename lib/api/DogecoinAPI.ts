@@ -13,7 +13,7 @@ class DogecoinAPI extends CryptoAPI {
         return "";
     }
 
-    getUnspentTransactions(address: string, amount: string) {
+    getUnspentTransactions(chainType : Network, address: string, amount: string) {
         //https://dogechain.info/api/blockchain_api
         throw new Error("Method not implemented.");
     }
@@ -22,7 +22,7 @@ class DogecoinAPI extends CryptoAPI {
         throw new Error("Method not implemented.");
     }
 
-    send(chainType: Network, fromAddresses: string[], fromPrivateKeys: string[], toAddresses: string[], toAmounts: string[]) {
+    send(chainType: Network, fromAddresses: string, fromPrivateKeys: string, toAddresses: string[], toAmounts: string[]) {
         throw new Error("Method not implemented.");
     }
 }

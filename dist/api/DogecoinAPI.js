@@ -9,7 +9,8 @@ class DogecoinAPI extends CryptoAPI_1.CryptoAPI {
     getBalance(chainType, address) {
         return "";
     }
-    getUnspentTransactions(address, amount) {
+    getUnspentTransactions(chainType, address, amount) {
+        //https://dogechain.info/api/blockchain_api
         throw new Error("Method not implemented.");
     }
     getTransactionFee(chainType, inputs, outputs) {

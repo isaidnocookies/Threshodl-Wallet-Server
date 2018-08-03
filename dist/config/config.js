@@ -2,16 +2,26 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 class Config {
     constructor() {
-        this.nodes = {
-            exchange: {
-                host: '',
-                token: 'this-will-be-the-coin-server-token'
+        this.db = {
+            production: {
+                host: "",
+                port: "",
+                username: "",
+                password: ""
             },
+            test: {
+                host: "",
+                port: "",
+                username: "",
+                password: ""
+            }
+        };
+        this.nodes = {
             bch: {
                 host: "http://cash:388a74f00eb5a0064b57c5c048ccbb85@18.144.60.209:18332",
             },
             btc: {
-                host: "http://threshodl:h0lyThr35h0dLb@7m@n13@54.193.16.100:8332",
+                host: "http://threshodl:h0lyThr35h0dLb@7m@n13@52.53.247.25:8332",
             },
             dash: {
                 host: "http://dash:388a74f00eb5a0064b57c5c048ccbb85@18.144.13.232:9998",
@@ -40,22 +50,30 @@ class Config {
         };
         this.insightServers = {
             bch: {
-                host: "",
+                main: "https://bch-insight.bitpay.com/api",
+                testnet: "https://test-bch-insight.bitpay.com/api",
             },
             btc: {
-                host: "https://insight.bitpay.com/api",
+                main: "https://insight.bitpay.com/api",
+                testnet: "https://test-insight.bitpay.com/api",
             },
             dash: {
-                host: "",
+                main: "https://insight.dash.org/insight-api",
+                testnet: "https://test.insight.dash.siampm.com/api",
             },
             ltc: {
-                host: "",
+                main: "https://insight.litecore.io/api",
+                testnet: "https://testnet.litecore.io/api",
             },
             zec: {
-                host: "",
+                main: "https://zcashnetwork.info/api",
+                testnet: "https://explorer.testnet.z.cash/api",
             },
             doge: {
-                host: "",
+                // https://dogechain.info/api/blockchain_api
+                // https://chain.so/api/v2/get_address_balance/DOGETEST/2MsQug2PDbor2ndqYu9MxMij3MZFZ3EkGk9
+                main: "https://dogechain.info/api/v1",
+                testnet: "https://chain.so/api/v2",
             }
         };
         this.externalapis = {
@@ -66,10 +84,10 @@ class Config {
         this.confirmations = {
             btc: 2,
             bch: 2,
-            dash: 10,
+            dash: 5,
             ltc: 2,
             zec: 2,
-            eth: 10,
+            eth: 5,
             doge: 2
         };
     }
