@@ -66,6 +66,10 @@ class ZCashAPI extends CryptoAPI {
     send(chainType: Network, fromAddresses: string, fromPrivateKeys: string, toAddresses: string[], toAmounts: string[]) {
         throw new Error("Method not implemented.");
     }
+
+    createTransactionHex(network: Network, fromAddress: string, fromPrivateKey: string, toAddresses: string[], toAmounts: string[], message: string) {
+        throw new Error("Method not implemented.");
+    }
 }
 
 export { ZCashAPI, Network };

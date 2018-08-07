@@ -18,22 +18,28 @@ class Config {
         };
         this.nodes = {
             bch: {
-                host: "http://cash:388a74f00eb5a0064b57c5c048ccbb85@18.144.60.209:18332",
+                main: "http://cash:388a74f00eb5a0064b57c5c048ccbb85@18.144.60.209:18332",
+                testnet: "",
             },
             btc: {
-                host: "http://threshodl:h0lyThr35h0dLb@7m@n13@52.53.247.25:8332",
+                main: "http://threshodl:h0lyThr35h0dLb@7m@n13@52.53.247.25:8332",
+                testnet: "http://threshodl:h0lyThr35h0dLb@7m@n13@52.53.247.25:8332"
             },
             dash: {
-                host: "http://dash:388a74f00eb5a0064b57c5c048ccbb85@18.144.13.232:9998",
+                main: "http://dash:388a74f00eb5a0064b57c5c048ccbb85@18.144.13.232:9998",
+                testnet: "",
             },
             ltc: {
-                host: "http://lite:388a74f00eb5a0064b57c5c048ccbb85@18.144.41.155:9332",
+                main: "http://lite:388a74f00eb5a0064b57c5c048ccbb85@18.144.41.155:9332",
+                testnet: "",
             },
             zec: {
-                host: "http://zcash:388a74f00eb5a0064b57c5c048ccbb85@54.193.95.108:8232",
+                main: "http://zcash:388a74f00eb5a0064b57c5c048ccbb85@54.193.95.108:8232",
+                testnet: "",
             },
             doge: {
-                host: "http://doge:388a74f00eb5a0064b57c5c048ccbb85@54.183.61.83:22556",
+                main: "http://doge:388a74f00eb5a0064b57c5c048ccbb85@54.183.61.83:22556",
+                testnet: "",
             },
             eth: {
                 host: "http://10.10.0.163:8545",
