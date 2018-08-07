@@ -1,7 +1,5 @@
 import { CryptoAPI, Network } from "./CryptoAPI";
 import { Config } from "../config/config";
-import { resolve } from "../../node_modules/@types/bluebird";
-
 
 class DashAPI extends CryptoAPI {
     
