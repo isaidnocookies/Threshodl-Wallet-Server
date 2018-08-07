@@ -3,7 +3,7 @@ import { Config } from "../config/config";
 
 class DashAPI extends CryptoAPI {
     
-    coin: string = "BTC";
+    coin: string = "DASH";
     network: Network;
     dashcore: any = require('dashcore-lib');
     config : any = new Config();
