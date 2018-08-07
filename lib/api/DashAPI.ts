@@ -8,6 +8,7 @@ class DashAPI extends CryptoAPI {
     dashcore: any = require('dashcore-lib');
     config : any = new Config();
 
+    
     createWallet(chainType : Network, seed : string) {
         var newPrivateKey: any;
         var newWif: string;
