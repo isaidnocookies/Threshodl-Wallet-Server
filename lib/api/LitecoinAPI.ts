@@ -14,11 +14,9 @@ class LitecoinAPI extends CryptoAPI {
         var success: boolean = true;
 
         if (chainType == Network.Mainnet) {
-            network = this.litecore.Networks.Mainnet;
+            network = this.litecore.Networks.livenet;
         } else if (chainType == Network.Testnet) {
-            network = this.litecore.Networks.Testnet;
-        } else if (chainType == Network.Regtest) {
-            network = this.litecore.Networks.Regtest;
+            network = this.litecore.Networks.testnet;
         } else {
             success = false;
         }
@@ -37,7 +35,7 @@ class LitecoinAPI extends CryptoAPI {
 
         if (success) {
             newWif = newPrivateKey.toWIF();
-            newAddress = newPrivateKey.toAddress(this.litecore.Networks.testnet).toString();
+            newAddress = newPrivateKey.toAddress(network).toString();
         }
 
         if (!newPrivateKey || !newWif || !newAddress) {

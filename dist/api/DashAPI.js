@@ -6,7 +6,7 @@ const config_1 = require("../config/config");
 class DashAPI extends CryptoAPI_1.CryptoAPI {
     constructor() {
         super(...arguments);
-        this.coin = "BTC";
+        this.coin = "DASH";
         this.dashcore = require('dashcore-lib');
         this.config = new config_1.Config();
     }
@@ -18,13 +18,10 @@ class DashAPI extends CryptoAPI_1.CryptoAPI {
         var network;
         var success = true;
         if (chainType == CryptoAPI_1.Network.Mainnet) {
-            network = this.dashcore.Networks.Mainnet;
+            network = this.dashcore.Networks.livenet;
         }
         else if (chainType == CryptoAPI_1.Network.Testnet) {
-            network = this.dashcore.Networks.Testnet;
-        }
-        else if (chainType == CryptoAPI_1.Network.Regtest) {
-            network = this.dashcore.Networks.Regtest;
+            network = this.dashcore.Networks.testnet;
         }
         else {
             success = false;
@@ -42,7 +39,7 @@ class DashAPI extends CryptoAPI_1.CryptoAPI {
         }
         if (success) {
             newWif = newPrivateKey.toWIF();
-            newAddress = newPrivateKey.toAddress(this.dashcore.Networks.testnet).toString();
+            newAddress = newPrivateKey.toAddress(network).toString();
         }
         if (!newPrivateKey || !newWif || !newAddress) {
             newPrivateKey = "";

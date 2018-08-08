@@ -14,11 +14,9 @@ class ZCashAPI extends CryptoAPI {
         var success: boolean = true;
 
         if (chainType == Network.Mainnet) {
-            network = this.zcashcore.Networks.Mainnet;
+            network = this.zcashcore.Networks.livenet;
         } else if (chainType == Network.Testnet) {
-            network = this.zcashcore.Networks.Testnet;
-        } else if (chainType == Network.Regtest) {
-            network = this.zcashcore.Networks.Regtest;
+            network = this.zcashcore.Networks.testnet;
         } else {
             success = false;
         }
@@ -37,7 +35,7 @@ class ZCashAPI extends CryptoAPI {
 
         if (success) {
             newWif = newPrivateKey.toWIF();
-            newAddress = newPrivateKey.toAddress(this.zcashcore.Networks.testnet).toString();
+            newAddress = newPrivateKey.toAddress(network).toString();
         }
 
         if (!newPrivateKey || !newWif || !newAddress) {

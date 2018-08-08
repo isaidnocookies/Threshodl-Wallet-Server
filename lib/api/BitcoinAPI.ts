@@ -19,11 +19,9 @@ class BitcoinAPI extends CryptoAPI {
         var success: boolean = true;
 
         if (chainType == Network.Mainnet) {
-            network = this.bitcore.Networks.Mainnet;
+            network = this.bitcore.Networks.livenet;
         } else if (chainType == Network.Testnet) {
-            network = this.bitcore.Networks.Testnet;
-        } else if (chainType == Network.Regtest) {
-            network = this.bitcore.Networks.Regtest;
+            network = this.bitcore.Networks.testnet;
         } else {
             success = false;
         }
@@ -42,7 +40,7 @@ class BitcoinAPI extends CryptoAPI {
 
         if (success) {
             newWif = newPrivateKey.toWIF();
-            newAddress = newPrivateKey.toAddress(this.bitcore.Networks.testnet).toString();
+            newAddress = newPrivateKey.toAddress(network).toString();
         }
 
         if (!newPrivateKey || !newWif || !newAddress) {

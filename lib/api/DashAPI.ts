@@ -17,11 +17,9 @@ class DashAPI extends CryptoAPI {
         var success: boolean = true;
 
         if (chainType == Network.Mainnet) {
-            network = this.dashcore.Networks.Mainnet;
+            network = this.dashcore.Networks.livenet;
         } else if (chainType == Network.Testnet) {
-            network = this.dashcore.Networks.Testnet;
-        } else if (chainType == Network.Regtest) {
-            network = this.dashcore.Networks.Regtest;
+            network = this.dashcore.Networks.testnet;
         } else {
             success = false;
         }
@@ -40,7 +38,7 @@ class DashAPI extends CryptoAPI {
 
         if (success) {
             newWif = newPrivateKey.toWIF();
-            newAddress = newPrivateKey.toAddress(this.dashcore.Networks.testnet).toString();
+            newAddress = newPrivateKey.toAddress(network).toString();
         }
 
         if (!newPrivateKey || !newWif || !newAddress) {
