@@ -2,10 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const CryptoAPI_1 = require("./CryptoAPI");
 exports.Network = CryptoAPI_1.Network;
+const config_1 = require("../config/config");
 class ZCashAPI extends CryptoAPI_1.CryptoAPI {
     constructor() {
         super(...arguments);
         this.zcashcore = require('zcash-bitcore-lib');
+        this.config = new config_1.Config();
     }
     createWallet(chainType, seed) {
         var newPrivateKey;
@@ -48,7 +50,26 @@ class ZCashAPI extends CryptoAPI_1.CryptoAPI {
         return ({ "address": newAddress, "privateKey": newPrivateKey, "wif": newWif, "fromSeed": fromSeed });
     }
     getBalance(chainType, address) {
-        return "";
+        var insightUrl;
+        if (chainType == 1) {
+            insightUrl = this.config.insightServers.zec.main;
+        }
+        else {
+            insightUrl = this.config.insightServers.zec.testnet;
+        }
+        const axios = require('axios');
+        return axios({
+            method: 'get',
+            url: insightUrl + '/addr/' + address,
+            responseType: 'application/json'
+        }).then(function (response) {
+            return ({ "confirmed": response.data.balance, "unconfirmed": response.data.unconfirmedBalance });
+        }).catch(error => {
+            return ({ "confirmed": "-1", "unconfirmed": "-1" });
+        });
+    }
+    sendTransactionHex(network, rawTransaction) {
+        throw new Error("Method not implemented.");
     }
     getUnspentTransactions(chainType, address, amount) {
         throw new Error("Method not implemented.");

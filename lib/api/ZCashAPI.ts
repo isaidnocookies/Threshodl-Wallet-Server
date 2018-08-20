@@ -1,9 +1,11 @@
 import { CryptoAPI, Network } from "./CryptoAPI";
+import { Config } from "../config/config";
 
 class ZCashAPI extends CryptoAPI {
 
     network: Network;
     zcashcore: any = require('zcash-bitcore-lib');
+    config : any = new Config();
 
     createWallet(chainType : Network, seed : string) {
         var newPrivateKey: any;
@@ -50,7 +52,27 @@ class ZCashAPI extends CryptoAPI {
     }
 
     getBalance(chainType: Network, address : string) {
-        return "";
+        var insightUrl : string;
+        if (chainType == 1) {
+            insightUrl = this.config.insightServers.zec.main;
+        } else {
+            insightUrl = this.config.insightServers.zec.testnet;
+        }
+
+        const axios = require('axios');
+        return axios({
+            method:'get',
+            url:insightUrl + '/addr/' + address,
+            responseType:'application/json'
+        }).then(function(response) {
+            return ({"confirmed" : response.data.balance, "unconfirmed": response.data.unconfirmedBalance});
+        }).catch(error => {
+            return ({"confirmed" : "-1", "unconfirmed" : "-1" });
+        });
+    }
+
+    sendTransactionHex(network: Network, rawTransaction: string) {
+        throw new Error("Method not implemented.");
     }
 
     getUnspentTransactions(chainType : Network, address: string, amount: string) {

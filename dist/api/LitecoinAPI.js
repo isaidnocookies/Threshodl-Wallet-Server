@@ -62,6 +62,9 @@ class LitecoinAPI extends CryptoAPI_1.CryptoAPI {
     createTransactionHex(network, fromAddress, fromPrivateKey, toAddresses, toAmounts, message) {
         throw new Error("Method not implemented.");
     }
+    sendTransactionHex(network, rawTransaction) {
+        throw new Error("Method not implemented.");
+    }
 }
 exports.LitecoinAPI = LitecoinAPI;
 //# sourceMappingURL=LitecoinAPI.js.map

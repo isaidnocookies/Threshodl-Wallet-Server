@@ -29,6 +29,10 @@ class DogecoinAPI extends CryptoAPI {
     createTransactionHex(network: Network, fromAddress: string, fromPrivateKey: string, toAddresses: string[], toAmounts: string[], message: string) {
         throw new Error("Method not implemented.");
     }
+
+    sendTransactionHex(network: Network, rawTransaction: string) {
+        throw new Error("Method not implemented.");
+    }
 }
 
 export { DogecoinAPI, Network };

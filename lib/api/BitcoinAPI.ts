@@ -160,23 +160,33 @@ class BitcoinAPI extends CryptoAPI {
                 } catch {
                     throw new Error(`${this.coin} - Error creating private key and transaction.`);
                 }
+
+                console.log(" about to create transaction")
                 
                 for (var i = 0; i < toAddresses.length; i++) {
                     let inAmount : number = Math.trunc(parseFloat(toAmounts[i]) / 0.00000001);
                     transaction.to(toAddresses[i], inAmount);
                 }
-                
-                try {
-                    transaction.change(fromAddress);
-                    transaction.fee(10000);
-                    transaction.addData(message);
-                    transaction.sign(privateKey);
-                } catch {
-                    throw new Error(`${this.coin} - Error signing raw transaction.`);
-                }
 
-                var txHex : string = transaction.toString();
-                return txHex;
+                return this.getTransactionFee(chainType, lUtxos.length, toAddresses.length).then(lfee => {
+                    var lTxFee : string = String(parseFloat(lfee) / 0.00000001)
+                    
+                    try {
+                        transaction.change(fromAddress);
+                        transaction.fee(parseFloat(lTxFee));
+
+                        if (message !== "") {
+                            transaction.addData(message);
+                        }
+                        
+                        transaction.sign(privateKey);
+                    } catch {
+                        throw new Error(`${this.coin} - Error signing raw transaction.`);
+                    }
+    
+                    var txHex : string = transaction.toString();
+                    return ({"txHex" : txHex, "fee" : lfee });
+                });
             } else {
                 throw new Error(`${this.coin} - Error creating raw transaction.`);
             }
@@ -269,7 +279,7 @@ class BitcoinAPI extends CryptoAPI {
                 
                 try {
                     transaction.change(fromAddress);
-                    transaction.fee(10000);
+                    transaction.fee(10000); // fix fees to use function and promise...
                     transaction.sign(privateKey);
                 } catch {
                     throw new Error(`${this.coin} - Error signing raw transaction.`);

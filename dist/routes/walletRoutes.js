@@ -199,20 +199,75 @@ class WalletRoutes {
                 case 'BTC':
                     api = new BitcoinAPI_1.BitcoinAPI;
                     break;
-                //     case 'LTC': api = new LitecoinAPI; break;
+                case 'LTC':
+                    api = new LitecoinAPI_1.LitecoinAPI;
+                    break;
                 case 'DASH':
                     api = new DashAPI_1.DashAPI;
                     break;
-                //     case 'ZEC': api = new ZCashAPI; break;
-                //     case 'DOGE': api = new DogecoinAPI; break;
+                case 'ZEC':
+                    api = new ZCashAPI_1.ZCashAPI;
+                    break;
+                case 'DOGE':
+                    api = new DogecoinAPI_1.DogecoinAPI;
+                    break;
                 default:
                     res.status(400).send(JSON.stringify({ success: false }));
                     return;
             }
+            var lSuccess;
+            var lReturn;
             return api.createTransactionHex(network, fromAddress, fromPrivateKey, toAddresses, toAmounts, message).then(txReturn => {
                 // TODO : handle errors
-                res.status(200).send(JSON.stringify({ success: true, txid: txReturn }));
-            }).catch(res.status(400).send(JSON.stringify({ success: false, txid: "" })));
+                lReturn = txReturn;
+                if (lReturn === "") {
+                    lSuccess = false;
+                }
+                else {
+                    lSuccess = true;
+                }
+                res.status(200).send(JSON.stringify({ success: lSuccess, message: lReturn }));
+            });
+        });
+        app.post('/wallets/sendRawTransaction/', (req, res) => {
+            var coin = req.body.coin;
+            var network = req.body.network;
+            var rawTransactoinHex = req.body.tx;
+            let api;
+            // let api : BitcoinAPI = new BitcoinAPI;
+            switch (coin) {
+                case 'BTC':
+                    api = new BitcoinAPI_1.BitcoinAPI;
+                    break;
+                case 'LTC':
+                    api = new LitecoinAPI_1.LitecoinAPI;
+                    break;
+                case 'DASH':
+                    api = new DashAPI_1.DashAPI;
+                    break;
+                case 'ZEC':
+                    api = new ZCashAPI_1.ZCashAPI;
+                    break;
+                case 'DOGE':
+                    api = new DogecoinAPI_1.DogecoinAPI;
+                    break;
+                default:
+                    res.status(400).send(JSON.stringify({ success: false }));
+                    return;
+            }
+            var lSuccess;
+            var lTxid;
+            return api.sendTransactionHex(network, rawTransactoinHex).then(txReturn => {
+                // TODO : handle errors
+                lTxid = txReturn;
+                if (lTxid === "") {
+                    lSuccess = false;
+                }
+                else {
+                    lSuccess = true;
+                }
+                res.status(200).send(JSON.stringify({ success: lSuccess, txid: lTxid }));
+            });
         });
     }
 }
