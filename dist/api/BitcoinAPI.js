@@ -1,4 +1,12 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const CryptoAPI_1 = require("./CryptoAPI");
 exports.Network = CryptoAPI_1.Network;
@@ -116,64 +124,70 @@ class BitcoinAPI extends CryptoAPI_1.CryptoAPI {
         });
     }
     createTransactionHex(chainType, fromAddress, fromPrivateKey, toAddresses, toAmounts, message) {
-        const axios = require('axios');
-        var total = toAmounts[0];
-        var insightUrl;
-        if (chainType == 1) {
-            insightUrl = this.config.insightServers.btc.main;
-        }
-        else {
-            insightUrl = this.config.insightServers.btc.testnet;
-        }
-        return this.getUnspentTransactions(chainType, fromAddress, String(total)).then(utxos => {
-            if (utxos) {
-                if (!fromPrivateKey || toAddresses.length <= 0 || toAddresses.length != toAmounts.length) {
-                    throw new Error(`${this.coin} - Error with send parameters.`);
-                }
-                var lUtxos = [];
-                for (var i = 0; i < utxos.length; i++) {
-                    var utxoIn = {
-                        "txId": utxos[i].txid,
-                        "outputIndex": utxos[i].vout,
-                        "address": utxos[i].address,
-                        "script": utxos[i].scriptPubKey,
-                        "satoshis": utxos[i].satoshis
-                    };
-                    lUtxos[i] = utxoIn;
-                }
-                try {
-                    var transaction = new this.bitcore.Transaction().from(lUtxos);
-                    var privateKey = new this.bitcore.PrivateKey(fromPrivateKey);
-                }
-                catch (_a) {
-                    throw new Error(`${this.coin} - Error creating private key and transaction.`);
-                }
-                console.log(" about to create transaction");
-                for (var i = 0; i < toAddresses.length; i++) {
-                    let inAmount = Math.trunc(parseFloat(toAmounts[i]) / 0.00000001);
-                    transaction.to(toAddresses[i], inAmount);
-                }
-                return this.getTransactionFee(chainType, lUtxos.length, toAddresses.length).then(lfee => {
-                    var lTxFee = String(parseFloat(lfee) / 0.00000001);
-                    console.log(transaction.toJSON());
-                    console.log(lTxFee);
-                    console.log(lfee);
+        return __awaiter(this, void 0, void 0, function* () {
+            var total = 0.0;
+            for (var i = 0; i < toAmounts.length; i++) {
+                total = total + (parseFloat(toAmounts[i]) / 0.00000001);
+            }
+            var feeEstimate = yield this.getTransactionFee(chainType, 2, 2);
+            return this.getUnspentTransactions(chainType, fromAddress, String(total)).then(utxos => {
+                if (utxos) {
+                    if (!fromPrivateKey || toAddresses.length <= 0 || toAddresses.length != toAmounts.length) {
+                        throw new Error(`${this.coin} - Error with send parameters.`);
+                    }
+                    var utxoTotal = 0;
+                    var lUtxos = [];
+                    for (var i = 0; i < utxos.length; i++) {
+                        var utxoIn = {
+                            "txId": utxos[i].txid,
+                            "outputIndex": utxos[i].vout,
+                            "address": utxos[i].address,
+                            "script": utxos[i].scriptPubKey,
+                            "satoshis": utxos[i].satoshis
+                        };
+                        utxoTotal = utxoTotal + parseFloat(utxos[i]);
+                        lUtxos[i] = utxoIn;
+                        if (utxoTotal > total + parseFloat(feeEstimate)) {
+                            // if we have enough utxos for the transaction, stop collecting them...
+                            break;
+                        }
+                    }
                     try {
-                        transaction.change(fromAddress);
-                        transaction.fee(parseFloat(lTxFee));
-                        transaction.addData(message);
-                        transaction.sign(privateKey);
+                        var transaction = new this.bitcore.Transaction().from(lUtxos);
+                        var privateKey = new this.bitcore.PrivateKey(fromPrivateKey);
                     }
                     catch (_a) {
-                        throw new Error(`${this.coin} - Error signing raw transaction.`);
+                        throw new Error(`${this.coin} - Error creating private key and transaction.`);
                     }
-                    var txHex = transaction.toString();
-                    return ({ "txHex": txHex, "fee": lfee });
-                });
-            }
-            else {
-                throw new Error(`${this.coin} - Error creating raw transaction.`);
-            }
+                    console.log(" about to create transaction");
+                    for (var i = 0; i < toAddresses.length; i++) {
+                        let inAmount = Math.trunc(parseFloat(toAmounts[i]) / 0.00000001);
+                        transaction.to(toAddresses[i], inAmount);
+                    }
+                    return this.getTransactionFee(chainType, lUtxos.length, toAddresses.length).then(lfee => {
+                        var lTxFee = String(parseFloat(lfee) / 0.00000001);
+                        if (parseFloat(lfee) + total > utxoTotal) {
+                            throw new Error(`${this.coin} - Not enough to cover fees in transaction creation.`);
+                        }
+                        try {
+                            transaction.change(fromAddress);
+                            transaction.fee(parseFloat(lTxFee));
+                            if (message !== "") {
+                                transaction.addData(message);
+                            }
+                            transaction.sign(privateKey);
+                        }
+                        catch (_a) {
+                            throw new Error(`${this.coin} - Error signing raw transaction.`);
+                        }
+                        var txHex = transaction.toString();
+                        return ({ "txHex": txHex, "fee": lfee });
+                    });
+                }
+                else {
+                    throw new Error(`${this.coin} - Error creating raw transaction.`);
+                }
+            });
         });
     }
     sendTransactionHex(chainType, txHex) {
@@ -226,72 +240,89 @@ class BitcoinAPI extends CryptoAPI_1.CryptoAPI {
             insightUrl = this.config.insightServers.btc.testnet;
             nodeUrl = this.config.nodes.btc.testnet;
         }
-        return this.getUnspentTransactions(chainType, fromAddress, String(total)).then(utxos => {
-            if (utxos) {
-                if (!fromPrivateKey || toAddresses.length <= 0 || toAddresses.length != toAmounts.length) {
-                    throw new Error(`${this.coin} - Error with send parameters.`);
-                }
-                var lUtxos = [];
-                for (var i = 0; i < utxos.length; i++) {
-                    var utxoIn = {
-                        "txId": utxos[i].txid,
-                        "outputIndex": utxos[i].vout,
-                        "address": utxos[i].address,
-                        "script": utxos[i].scriptPubKey,
-                        "satoshis": utxos[i].satoshis
-                    };
-                    lUtxos[i] = utxoIn;
-                }
-                try {
-                    var transaction = new this.bitcore.Transaction().from(lUtxos);
-                    var privateKey = new this.bitcore.PrivateKey(fromPrivateKey);
-                }
-                catch (_a) {
-                    throw new Error(`${this.coin} - Error creating private key and transaction.`);
-                }
-                for (var i = 0; i < toAddresses.length; i++) {
-                    let inAmount = Math.trunc(parseFloat(toAmounts[i]) / 0.00000001);
-                    transaction.to(toAddresses[i], inAmount);
-                }
-                try {
-                    transaction.change(fromAddress);
-                    transaction.fee(10000);
-                    transaction.sign(privateKey);
-                }
-                catch (_b) {
-                    throw new Error(`${this.coin} - Error signing raw transaction.`);
-                }
-                var txHex = transaction.toString();
-                return axios({
-                    method: 'post',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    url: nodeUrl,
-                    data: {
-                        method: 'sendrawtransaction',
-                        'params': [txHex]
-                    }
-                }).then(response => {
-                    if (response.data.result && response.data.result.error == null) {
-                        return response.data.result;
-                    }
-                    else {
-                        let message = {
-                            message: `Error sending raw transaction: ${this.coin.toUpperCase()} .`,
-                            data: response,
-                        };
-                        throw new Error(`${this.coin} - Error sending raw transaction. Error  ${JSON.stringify(message)}`);
-                    }
-                }).catch(error => {
-                    throw new Error(`${this.coin} - Error sending raw transaction.`);
-                });
-            }
-            else {
+        return this.createTransactionHex(chainType, fromAddress, fromPrivateKey, toAddresses, toAmounts, "").then(txhex => {
+            return this.sendTransactionHex(chainType, txhex).then(txid => {
+                return txid;
+            }).catch(error => {
                 throw new Error(`${this.coin} - Error sending raw transaction.`);
-            }
+            });
+        }).catch(error => {
+            throw new Error(`${this.coin} - Error creating raw transaction.`);
         });
     }
 }
 exports.BitcoinAPI = BitcoinAPI;
+// createTransactionHex(chainType: Network, fromAddress: string, fromPrivateKey: string, toAddresses: string[], toAmounts: string[], message: string) {
+// const axios = require('axios');
+// var total = toAmounts[0];
+// var insightUrl : string;
+// var nodeUrl : string;
+// if (chainType == 1) {
+//     insightUrl = this.config.insightServers.btc.main;
+//     nodeUrl = this.config.nodes.btc.main;
+// } else {
+//     insightUrl = this.config.insightServers.btc.testnet;
+//     nodeUrl = this.config.nodes.btc.testnet;
+// }
+// return this.getUnspentTransactions(chainType, fromAddress, String(total)).then(utxos => {
+//     if (utxos) {
+//         if (!fromPrivateKey || toAddresses.length <= 0 || toAddresses.length != toAmounts.length) {
+//             throw new Error(`${this.coin} - Error with send parameters.`);
+//         }
+//         var lUtxos : any[] = [];
+//         for (var i = 0; i < utxos.length; i++) {
+//             var utxoIn = {
+//                 "txId" : utxos[i].txid,
+//                 "outputIndex" : utxos[i].vout,
+//                 "address" : utxos[i].address,
+//                 "script" : utxos[i].scriptPubKey,
+//                 "satoshis" : utxos[i].satoshis
+//             };
+//             lUtxos[i] = utxoIn;
+//         }
+//         try {
+//             var transaction = new this.bitcore.Transaction().from(lUtxos);
+//             var privateKey = new this.bitcore.PrivateKey(fromPrivateKey);
+//         } catch {
+//             throw new Error(`${this.coin} - Error creating private key and transaction.`);
+//         }
+//         for (var i = 0; i < toAddresses.length; i++) {
+//             let inAmount : number = Math.trunc(parseFloat(toAmounts[i]) / 0.00000001);
+//             transaction.to(toAddresses[i], inAmount);
+//         }
+//         try {
+//             transaction.change(fromAddress);
+//             transaction.fee(10000); // fix fees to use function and promise...
+//             transaction.sign(privateKey);
+//         } catch {
+//             throw new Error(`${this.coin} - Error signing raw transaction.`);
+//         }
+//         var txHex : string = transaction.toString();
+//         return axios({
+//             method: 'post',
+//             headers: {
+//               'Content-Type': 'application/json'
+//             },
+//             url: nodeUrl,
+//             data: {
+//               method: 'sendrawtransaction',
+//               'params': [txHex]
+//             }
+//           }).then(response => {
+//             if (response.data.result && response.data.result.error == null) {
+//               return response.data.result;
+//             } else {
+//               let message = {
+//                 message: `Error sending raw transaction: ${this.coin.toUpperCase()} .`,
+//                 data: response,
+//               };
+//               throw new Error(`${this.coin} - Error sending raw transaction. Error  ${JSON.stringify(message)}`);
+//             }
+//           }).catch(error => {
+//             throw new Error(`${this.coin} - Error sending raw transaction.`);
+//           });
+//     } else {
+//         throw new Error(`${this.coin} - Error sending raw transaction.`);
+//     }
+// });
 //# sourceMappingURL=BitcoinAPI.js.map
