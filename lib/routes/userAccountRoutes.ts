@@ -1,26 +1,62 @@
 import { Request, Response } from 'express'
-import * as express from 'express';
 import { UserAccount } from '../api/UserAccount';
 
 export class UserAccountRoutes {
     public routes (app) : any {
         app.route('/userAccount/').get((req: Request, res: Response) => {
+            var userAccount : any = new UserAccount;
+
+            userAccount.createAccountKeys("giant defense lens very flavor few poverty secret fitness lounge skirt grain");
+
             res.status(200).send({message: "User account says, hello world!"})
         })
 
         app.post('/userAccount/create/', (req: Request, res: Response) => {
             var userAccount : any = new UserAccount;
+            var lUsername : string = req.body.username;
 
-            // Validate Username
-                // TODO:
+            var lSeed : string = userAccount.createMnemonicWords();
+            var keys : any = userAccount.createAccountKeys(lSeed);
+            var lPrivateKey : string = lPrivateKey = keys[0];
+            var lPublicKey : string = lPublicKey = keys[1];
 
-            // Create Seed
-            var seed : string = userAccount.createMnemonicWords();
+            userAccount.createAccount(lUsername, lPublicKey, lPublicKey).then(success => {
+                if (!success) {
+                    lUsername = "";
+                    lSeed = "";
+                    lPrivateKey = "";
+                    lPublicKey = "";
+                }
+                res.send(JSON.stringify({success: success, username: lUsername, seed: lSeed, publicKey: lPublicKey, privateKey: lPrivateKey}));
+            });
+        });
 
-            // Create Private Key and Public Key
+        app.post('/userAccount/recover/', (req: Request, res: Response) => {
+            var userAccount : any = new UserAccount;
 
-            // Return useraccount information
-            res.send(JSON.stringify({success: false, username: "", seed: seed}));
+            var lSeed : string = req.body.seed;
+            var keys : any = userAccount.createAccountKeys(lSeed);
+            var lPrivateKey : string = lPrivateKey = keys[0];
+            var lPublicKey : string = lPublicKey = keys[1];
+            var success : boolean;
+
+            userAccount.getUsername(lPublicKey).then(username => {
+                if (username.length <= 0) {
+                    success = false; lSeed = ""; keys = ""; lPrivateKey = ""; lPublicKey = "";
+                } else {
+                    success = true;
+                }
+                res.send(JSON.stringify({success: success, username: username, seed: lSeed, publicKey: lPublicKey, privateKey: lPrivateKey}));
+            })
+        });
+
+        app.post('/userAccount/accountExists/', (req: Request, res: Response) => {
+            var userAccount : any = new UserAccount;
+            var lUsername : string = req.body.username;
+
+            userAccount.checkUsername(lUsername).then(isFound => {
+                res.status(200).send(JSON.stringify({success: isFound}));
+            });
         });
 
         app.post('/userAccount/signMessage/', (req: Request, res: Response) => {

@@ -167,7 +167,12 @@ class BitcoinAPI extends CryptoAPI_1.CryptoAPI {
                     return this.getTransactionFee(chainType, lUtxos.length, toAddresses.length).then(lfee => {
                         var lTxFee = String(parseFloat(lfee) / 0.00000001);
                         if (parseFloat(lfee) + total > utxoTotal) {
-                            throw new Error(`${this.coin} - Not enough to cover fees in transaction creation.`);
+                            if ((utxoTotal - total) > 0 && ((utxoTotal - total) < parseFloat(lfee))) {
+                                lTxFee = String(utxoTotal - total);
+                            }
+                            else {
+                                throw new Error(`${this.coin} - Not enough to cover fees in transaction creation.`);
+                            }
                         }
                         try {
                             transaction.change(fromAddress);
