@@ -2,44 +2,39 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 class Config {
     constructor() {
+        this.localEnvironment = false;
         this.db = {
             production: {
-                host: "",
-                port: "",
-                username: "",
-                password: ""
+                url: "mongodb+srv://thdlDev:pass123!@thdldev-pdprj.mongodb.net/thdlDev?retryWrites=true"
             },
             test: {
-                host: "",
-                port: "",
-                username: "",
-                password: ""
+                url: "mongodb://localhost/Threshodl"
             }
         };
         this.nodes = {
             bch: {
-                main: "http://cash:388a74f00eb5a0064b57c5c048ccbb85@18.144.60.209:18332",
-                testnet: "",
+                main: "",
+                testnet: "http://cash:388a74f00eb5a0064b57c5c048ccbb85@18.144.60.209:18332",
             },
             btc: {
-                main: "http://threshodl:h0lyThr35h0dLb@7m@n13@52.53.247.25:8332",
+                main: "",
                 testnet: "http://threshodl:h0lyThr35h0dLb@7m@n13@52.53.247.25:8332"
             },
             dash: {
-                main: "http://dash:388a74f00eb5a0064b57c5c048ccbb85@18.144.13.232:9998",
-                testnet: "",
+                main: "",
+                testnet: "http://dash:388a74f00eb5a0064b57c5c048ccbb85@18.144.13.232:9998",
             },
             ltc: {
-                main: "http://lite:388a74f00eb5a0064b57c5c048ccbb85@18.144.41.155:9332",
-                testnet: "",
+                main: "",
+                testnet: "http://lite:388a74f00eb5a0064b57c5c048ccbb85@18.144.41.155:9332",
             },
             zec: {
-                main: "http://zcash:388a74f00eb5a0064b57c5c048ccbb85@54.193.95.108:8232",
-                testnet: "",
+                main: "",
+                testnet: "http://zcash:388a74f00eb5a0064b57c5c048ccbb85@54.193.95.108:8232",
             },
             doge: {
-                main: "http://doge:388a74f00eb5a0064b57c5c048ccbb85@54.183.61.83:22556",
-                testnet: "",
+                main: "",
+                testnet: "http://doge:388a74f00eb5a0064b57c5c048ccbb85@54.183.61.83:22556",
             },
             eth: {
                 host: "http://10.10.0.163:8545",
@@ -61,7 +56,8 @@ class Config {
             },
             btc: {
                 main: "https://insight.bitpay.com/api",
-                testnet: "https://test-insight.bitpay.com/api",
+                testnet: "https://testnet.blockexplorer.com/api"
+                //testnet: "https://test-insight.bitpay.com/api",
             },
             dash: {
                 main: "https://insight.dash.org/insight-api",

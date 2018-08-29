@@ -5,15 +5,17 @@ import * as mongoose from "mongoose";
 import { Routes } from "./routes/routes";
 import { UserAccountRoutes } from "./routes/userAccountRoutes";
 import { WalletRoutes } from "./routes/walletRoutes";
+import { Config } from "./config/config";
 // import { DarkRoutes } from "./routes/darkRoutes";
 
 class App {
     public app: express.Application;
 
+    public configuration : any = new Config();
     public baseRoutes: Routes = new Routes();
     public userAccountRoutes: UserAccountRoutes = new UserAccountRoutes();
     public walletRoutes: WalletRoutes = new WalletRoutes();
-    public mongoUrl: string = 'mongodb://localhost/Threshodl';
+    public mongoUrl : string = (this.configuration.localEnvironment ? this.configuration.db.test.url : this.configuration.db.production.url);
 
     constructor() {
         this.app = express();

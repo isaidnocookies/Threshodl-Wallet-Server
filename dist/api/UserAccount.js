@@ -53,14 +53,34 @@ class UserAccount {
             }
         });
     }
+    checkPublicKeyExists(iPublicKey) {
+        var UserAccountObject = mongoose.model('UserAccountObject', userAccountModel_1.UserAccountSchema);
+        return UserAccountObject.find({ publickey: iPublicKey }).then(docs => {
+            if (docs.length) {
+                console.log('user exists: ', docs.username);
+                return true;
+            }
+            else {
+                return false;
+            }
+        });
+    }
     validateUsername(iUsername) {
         throw new Error("Method not implemented.");
     }
     changeUsername(publicKey, newUsername) {
         throw new Error("Method not implemented.");
     }
-    getUsername(publicKey) {
-        throw new Error("Method not implemented.");
+    getUsername(iPublicKey) {
+        var UserAccountObject = mongoose.model('UserAccountObject', userAccountModel_1.UserAccountSchema);
+        return UserAccountObject.find({ publickey: iPublicKey }).then(docs => {
+            if (docs.length) {
+                return docs[0].username;
+            }
+            else {
+                return "";
+            }
+        });
     }
 }
 exports.UserAccount = UserAccount;

@@ -104,7 +104,6 @@ export class WalletRoutes {
         });
 
         app.post('/wallets/txFee/', (req: Request, res: Response) => {
-            var address : string = req.body.address;
             var coin : string = req.body.coin;
             var network : number = req.body.network;
 
@@ -167,7 +166,6 @@ export class WalletRoutes {
             var message : string = req.body.message;
 
             let api : CryptoAPI;
-            // let api : BitcoinAPI = new BitcoinAPI;
 
             switch(coin) {
                 case 'BTC': api = new BitcoinAPI; break;
@@ -202,7 +200,6 @@ export class WalletRoutes {
             var rawTransactoinHex : string = req.body.tx
 
             let api : CryptoAPI;
-            // let api : BitcoinAPI = new BitcoinAPI;
 
             switch(coin) {
                 case 'BTC': api = new BitcoinAPI; break;

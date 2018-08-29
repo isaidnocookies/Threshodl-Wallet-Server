@@ -12,11 +12,9 @@ class UserAccountRoutes {
             var userAccount = new UserAccount_1.UserAccount;
             var lUsername = req.body.username;
             var lSeed = userAccount.createMnemonicWords();
-            var lPrivateKey;
-            var lPublicKey;
             var keys = userAccount.createAccountKeys(lSeed);
-            lPrivateKey = keys[0];
-            lPublicKey = keys[1];
+            var lPrivateKey = lPrivateKey = keys[0];
+            var lPublicKey = lPublicKey = keys[1];
             userAccount.createAccount(lUsername, lPublicKey, lPublicKey).then(success => {
                 if (!success) {
                     lUsername = "";
@@ -28,7 +26,25 @@ class UserAccountRoutes {
             });
         });
         app.post('/userAccount/recover/', (req, res) => {
-            var publicKey = req.body.publicKey;
+            var userAccount = new UserAccount_1.UserAccount;
+            var lSeed = req.body.seed;
+            var keys = userAccount.createAccountKeys(lSeed);
+            var lPrivateKey = lPrivateKey = keys[0];
+            var lPublicKey = lPublicKey = keys[1];
+            var success;
+            userAccount.getUsername(lPublicKey).then(username => {
+                if (username.length <= 0) {
+                    success = false;
+                    lSeed = "";
+                    keys = "";
+                    lPrivateKey = "";
+                    lPublicKey = "";
+                }
+                else {
+                    success = true;
+                }
+                res.send(JSON.stringify({ success: success, username: username, seed: lSeed, publicKey: lPublicKey, privateKey: lPrivateKey }));
+            });
         });
         app.post('/userAccount/accountExists/', (req, res) => {
             var userAccount = new UserAccount_1.UserAccount;

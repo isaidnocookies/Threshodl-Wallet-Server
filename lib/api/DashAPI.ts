@@ -123,8 +123,14 @@ class DashAPI extends CryptoAPI {
         });
     }
 
-    createTransactionHex(chainType: Network, fromAddress: string, fromPrivateKey: string, toAddresses: string[], toAmounts: string[], message: string) {
-        var total = toAmounts[0];
+    async createTransactionHex(chainType: Network, fromAddress: string, fromPrivateKey: string, toAddresses: string[], toAmounts: string[], message: string) {
+        var total : number = 0.0;
+
+        for (var i = 0; i < toAmounts.length; i++) {
+            total = total + (parseFloat(toAmounts[i]) / 0.00000001);
+        }
+
+        var feeEstimate : string = await this.getTransactionFee(chainType, 2, 2);
 
         return this.getUnspentTransactions(chainType, fromAddress, String(total)).then(utxos => {
             if (utxos) {
@@ -132,16 +138,23 @@ class DashAPI extends CryptoAPI {
                     throw new Error(`${this.coin} - Error with send parameters.`);
                 }
 
+                var utxoTotal : number = 0;
                 var lUtxos : any[] = [];
                 for (var i = 0; i < utxos.length; i++) {
-                    var utxoIn : any = {
+                    var utxoIn = {
                         "txId" : utxos[i].txid,
                         "outputIndex" : utxos[i].vout,
                         "address" : utxos[i].address,
                         "script" : utxos[i].scriptPubKey,
                         "satoshis" : utxos[i].satoshis
                     };
+                    utxoTotal = utxoTotal + parseFloat(utxos[i])
                     lUtxos[i] = utxoIn;
+
+                    if (utxoTotal > total + parseFloat(feeEstimate)) {
+                        // if we have enough utxos for the transaction, stop collecting them...
+                        break;
+                    }
                 }
 
                 try {
@@ -150,23 +163,42 @@ class DashAPI extends CryptoAPI {
                 } catch {
                     throw new Error(`${this.coin} - Error creating private key and transaction.`);
                 }
+
+                console.log(" about to create transaction")
                 
                 for (var i = 0; i < toAddresses.length; i++) {
                     let inAmount : number = Math.trunc(parseFloat(toAmounts[i]) / 0.00000001);
                     transaction.to(toAddresses[i], inAmount);
                 }
-                
-                try {
-                    transaction.change(fromAddress);
-                    transaction.fee(10000);
-                    transaction.addData(message);
-                    transaction.sign(privateKey);
-                } catch {
-                    throw new Error(`${this.coin} - Error signing raw transaction.`);
-                }
 
-                var txHex : string = transaction.toString();
-                return txHex;
+                return this.getTransactionFee(chainType, lUtxos.length, toAddresses.length).then(lfee => {
+                    var lTxFee : string = String(parseFloat(lfee) / 0.00000001)
+
+                    if (parseFloat(lfee) + total > utxoTotal) {
+
+                        if ((utxoTotal - total) > 0 && ((utxoTotal - total) < parseFloat(lfee))) {
+                            lTxFee = String(utxoTotal - total);
+                        } else {
+                            throw new Error(`${this.coin} - Not enough to cover fees in transaction creation.`);
+                        }
+                    }
+                    
+                    try {
+                        transaction.change(fromAddress);
+                        transaction.fee(parseFloat(lTxFee));
+
+                        if (message !== "") {
+                            transaction.addData(message);
+                        }
+
+                        transaction.sign(privateKey);
+                    } catch {
+                        throw new Error(`${this.coin} - Error signing raw transaction.`);
+                    }
+    
+                    var txHex : string = transaction.toString();
+                    return ({"txHex" : txHex, "fee" : lfee });
+                });
             } else {
                 throw new Error(`${this.coin} - Error creating raw transaction.`);
             }
@@ -213,85 +245,14 @@ class DashAPI extends CryptoAPI {
     }
 
     send(chainType: Network, fromAddress: string, fromPrivateKey: string, toAddresses: string[], toAmounts: string[]) {
-        const axios = require('axios');
-        var total = toAmounts[0];
-
-        var insightUrl : string;
-        var nodeUrl : string;
-
-        if (chainType == 1) {
-            insightUrl = this.config.insightServers.dash.main;
-            nodeUrl = this.config.nodes.dash.main;
-        } else {
-            insightUrl = this.config.insightServers.dash.testnet;
-            nodeUrl = this.config.nodes.dash.testnet;
-        }
-
-        return this.getUnspentTransactions(chainType, fromAddress, String(total)).then(utxos => {
-            if (utxos) {
-                if (!fromPrivateKey || toAddresses.length <= 0 || toAddresses.length != toAmounts.length) {
-                    throw new Error(`${this.coin} - Error with send parameters.`);
-                }
-
-                var lUtxos : any[] = [];
-                for (var i = 0; i < utxos.length; i++) {
-                    var utxoIn = {
-                        "txId" : utxos[i].txid,
-                        "outputIndex" : utxos[i].vout,
-                        "address" : utxos[i].address,
-                        "script" : utxos[i].scriptPubKey,
-                        "satoshis" : utxos[i].satoshis
-                    };
-                    lUtxos[i] = utxoIn;
-                }
-
-                try {
-                    var transaction = new this.dashcore.Transaction().from(lUtxos);
-                    var privateKey = new this.dashcore.PrivateKey(fromPrivateKey);
-                } catch {
-                    throw new Error(`${this.coin} - Error creating private key and transaction.`);
-                }
-                
-                for (var i = 0; i < toAddresses.length; i++) {
-                    let inAmount : number = Math.trunc(parseFloat(toAmounts[i]) / 0.00000001);
-                    transaction.to(toAddresses[i], inAmount);
-                }
-                
-                try {
-                    transaction.change(fromAddress);
-                    transaction.fee(10000);
-                    transaction.sign(privateKey);
-                } catch {
-                    throw new Error(`${this.coin} - Error signing raw transaction.`);
-                }
-
-                var txHex : string = transaction.toString();
-                return axios({
-                    method: 'post',
-                    headers: {
-                      'Content-Type': 'application/json'
-                    },
-                    url: nodeUrl,
-                    data: {
-                      method: 'sendrawtransaction',
-                      'params': [txHex]
-                    }
-                  }).then(response => {
-                    if (response.data.result && response.data.result.error == null) {
-                      return response.data.result;
-                    } else {
-                      let message = {
-                        message: `Error sending raw transaction: ${this.coin.toUpperCase()} .`,
-                        data: response,
-                      };
-                      throw new Error(`${this.coin} - Error sending raw transaction. Error  ${JSON.stringify(message)}`);
-                    }
-                  }).catch(error => {
-                    throw new Error(`${this.coin} - Error sending raw transaction.`);
-                  });
-            } else {
+        return this.createTransactionHex(chainType, fromAddress, fromPrivateKey, toAddresses, toAmounts, "").then(txhex => {
+            return this.sendTransactionHex(chainType, txhex).then(txid => {
+                return txid;
+            }).catch(error => {
                 throw new Error(`${this.coin} - Error sending raw transaction.`);
-            }
+            });
+        }).catch(error => {
+            throw new Error(`${this.coin} - Error creating raw transaction.`);
         });
     }
 }

@@ -80,8 +80,15 @@ class UserAccount {
         throw new Error("Method not implemented.");
     }
 
-    getUsername(publicKey : string) {
-        throw new Error("Method not implemented.");
+    getUsername(iPublicKey : string) {
+        var UserAccountObject : any = mongoose.model('UserAccountObject', UserAccountSchema);
+        return UserAccountObject.find({publickey : iPublicKey}).then(docs => {
+            if (docs.length){
+                return docs[0].username;
+            } else {
+                return "";
+            }
+        });
     }
 }
 

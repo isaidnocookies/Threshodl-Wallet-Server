@@ -1,4 +1,12 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const CryptoAPI_1 = require("./CryptoAPI");
 exports.Network = CryptoAPI_1.Network;
@@ -6,6 +14,7 @@ const config_1 = require("../config/config");
 class ZCashAPI extends CryptoAPI_1.CryptoAPI {
     constructor() {
         super(...arguments);
+        this.coin = "ZEC";
         this.zcashcore = require('zcash-bitcore-lib');
         this.config = new config_1.Config();
     }
@@ -68,20 +77,171 @@ class ZCashAPI extends CryptoAPI_1.CryptoAPI {
             return ({ "confirmed": "-1", "unconfirmed": "-1" });
         });
     }
-    sendTransactionHex(network, rawTransaction) {
-        throw new Error("Method not implemented.");
+    getTransactionFee(chainType, inputs, outputs) {
+        const axios = require('axios');
+        var insightUrl;
+        if (chainType == 1) {
+            insightUrl = this.config.insightServers.zec.main;
+        }
+        else {
+            insightUrl = this.config.insightServers.zec.testnet;
+        }
+        return axios({
+            method: 'get',
+            url: insightUrl + "/utils/estimatefee?nbBlocks=2",
+            responseType: 'application/json'
+        }).then(function (response) {
+            return "0.0001";
+        }).catch(error => {
+            console.log(error);
+            return "-1";
+        });
     }
     getUnspentTransactions(chainType, address, amount) {
-        throw new Error("Method not implemented.");
+        return this.getUnspentTransactionsInternal(chainType, address, amount, 3);
     }
-    getTransactionFee(chainType, inputs, outputs) {
-        throw new Error("Method not implemented.");
+    getUnspentTransactionsInternal(chainType, address, amount, attempts) {
+        const axios = require('axios');
+        var insightUrl;
+        if (chainType == 1) {
+            insightUrl = this.config.insightServers.zec.main;
+        }
+        else {
+            insightUrl = this.config.insightServers.zec.testnet;
+        }
+        return axios({
+            method: 'get',
+            url: insightUrl + '/addr/' + address + "/utxo",
+            responseType: 'application/json'
+        }).then(function (response) {
+            return response.data;
+        }).catch(error => {
+            if (attempts > 0) {
+                return this.getUnspentTransactionsInternal(chainType, address, amount, --attempts);
+            }
+            console.log("Error - Get upspent transactions internal failed...");
+            return null;
+        });
     }
-    send(chainType, fromAddresses, fromPrivateKeys, toAddresses, toAmounts) {
-        throw new Error("Method not implemented.");
+    createTransactionHex(chainType, fromAddress, fromPrivateKey, toAddresses, toAmounts, message) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var total = 0.0;
+            for (var i = 0; i < toAmounts.length; i++) {
+                total = total + (parseFloat(toAmounts[i]) / 0.00000001);
+            }
+            var feeEstimate = yield this.getTransactionFee(chainType, 2, 2);
+            return this.getUnspentTransactions(chainType, fromAddress, String(total)).then(utxos => {
+                if (utxos) {
+                    if (!fromPrivateKey || toAddresses.length <= 0 || toAddresses.length != toAmounts.length) {
+                        throw new Error(`${this.coin} - Error with send parameters.`);
+                    }
+                    var utxoTotal = 0;
+                    var lUtxos = [];
+                    for (var i = 0; i < utxos.length; i++) {
+                        var utxoIn = {
+                            "txId": utxos[i].txid,
+                            "outputIndex": utxos[i].vout,
+                            "address": utxos[i].address,
+                            "script": utxos[i].scriptPubKey,
+                            "satoshis": utxos[i].satoshis
+                        };
+                        utxoTotal = utxoTotal + parseFloat(utxos[i]);
+                        lUtxos[i] = utxoIn;
+                        if (utxoTotal > total + parseFloat(feeEstimate)) {
+                            // if we have enough utxos for the transaction, stop collecting them...
+                            break;
+                        }
+                    }
+                    try {
+                        var transaction = new this.zcashcore.Transaction().from(lUtxos);
+                        var privateKey = new this.zcashcore.PrivateKey(fromPrivateKey);
+                    }
+                    catch (_a) {
+                        throw new Error(`${this.coin} - Error creating private key and transaction.`);
+                    }
+                    console.log(" about to create transaction");
+                    for (var i = 0; i < toAddresses.length; i++) {
+                        let inAmount = Math.trunc(parseFloat(toAmounts[i]) / 0.00000001);
+                        transaction.to(toAddresses[i], inAmount);
+                    }
+                    return this.getTransactionFee(chainType, lUtxos.length, toAddresses.length).then(lfee => {
+                        var lTxFee = String(parseFloat(lfee) / 0.00000001);
+                        if (parseFloat(lfee) + total > utxoTotal) {
+                            if ((utxoTotal - total) > 0 && ((utxoTotal - total) < parseFloat(lfee))) {
+                                lTxFee = String(utxoTotal - total);
+                            }
+                            else {
+                                throw new Error(`${this.coin} - Not enough to cover fees in transaction creation.`);
+                            }
+                        }
+                        try {
+                            transaction.change(fromAddress);
+                            transaction.fee(parseFloat(lTxFee));
+                            if (message !== "") {
+                                transaction.addData(message);
+                            }
+                            transaction.sign(privateKey);
+                        }
+                        catch (_a) {
+                            throw new Error(`${this.coin} - Error signing raw transaction.`);
+                        }
+                        var txHex = transaction.toString();
+                        return ({ "txHex": txHex, "fee": lfee });
+                    });
+                }
+                else {
+                    throw new Error(`${this.coin} - Error creating raw transaction.`);
+                }
+            });
+        });
     }
-    createTransactionHex(network, fromAddress, fromPrivateKey, toAddresses, toAmounts, message) {
-        throw new Error("Method not implemented.");
+    sendTransactionHex(chainType, txHex) {
+        const axios = require('axios');
+        // var insightUrl : string;
+        var nodeUrl;
+        if (chainType == 1) {
+            // insightUrl = this.config.insightServers.btc.main;
+            nodeUrl = this.config.nodes.zec.main;
+        }
+        else {
+            // insightUrl = this.config.insightServers.btc.testnet;
+            nodeUrl = this.config.nodes.zec.testnet;
+        }
+        return axios({
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            url: nodeUrl,
+            data: {
+                method: 'sendrawtransaction',
+                'params': [txHex]
+            }
+        }).then(response => {
+            if (response.data.result && response.data.result.error == null) {
+                return response.data.result;
+            }
+            else {
+                let message = {
+                    message: `Error sending raw transaction: ${this.coin.toUpperCase()} .`,
+                    data: response,
+                };
+                throw new Error(`${this.coin} - Error sending raw transaction. Error  ${JSON.stringify(message)}`);
+            }
+        }).catch(error => {
+            throw new Error(`${this.coin} - Error sending raw transaction.`);
+        });
+    }
+    send(chainType, fromAddress, fromPrivateKey, toAddresses, toAmounts) {
+        return this.createTransactionHex(chainType, fromAddress, fromPrivateKey, toAddresses, toAmounts, "").then(txhex => {
+            return this.sendTransactionHex(chainType, txhex).then(txid => {
+                return txid;
+            }).catch(error => {
+                throw new Error(`${this.coin} - Error sending raw transaction.`);
+            });
+        }).catch(error => {
+            throw new Error(`${this.coin} - Error creating raw transaction.`);
+        });
     }
 }
 exports.ZCashAPI = ZCashAPI;

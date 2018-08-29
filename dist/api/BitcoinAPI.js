@@ -100,6 +100,7 @@ class BitcoinAPI extends CryptoAPI_1.CryptoAPI {
             if (attempts > 0) {
                 return this.getUnspentTransactionsInternal(chainType, address, amount, --attempts);
             }
+            console.log("Error - Get upspent transactions internal failed...");
             return null;
         });
     }
@@ -166,6 +167,9 @@ class BitcoinAPI extends CryptoAPI_1.CryptoAPI {
                     }
                     return this.getTransactionFee(chainType, lUtxos.length, toAddresses.length).then(lfee => {
                         var lTxFee = String(parseFloat(lfee) / 0.00000001);
+                        console.log("utxoTotal " + utxoTotal);
+                        console.log("total " + total);
+                        console.log("lfee " + lfee);
                         if (parseFloat(lfee) + total > utxoTotal) {
                             if ((utxoTotal - total) > 0 && ((utxoTotal - total) < parseFloat(lfee))) {
                                 lTxFee = String(utxoTotal - total);
@@ -178,6 +182,7 @@ class BitcoinAPI extends CryptoAPI_1.CryptoAPI {
                             transaction.change(fromAddress);
                             transaction.fee(parseFloat(lTxFee));
                             if (message !== "") {
+                                console.log(`Adding transaction message -- ${this.coin}`);
                                 transaction.addData(message);
                             }
                             transaction.sign(privateKey);
@@ -197,14 +202,14 @@ class BitcoinAPI extends CryptoAPI_1.CryptoAPI {
     }
     sendTransactionHex(chainType, txHex) {
         const axios = require('axios');
-        var insightUrl;
+        // var insightUrl : string;
         var nodeUrl;
         if (chainType == 1) {
-            insightUrl = this.config.insightServers.btc.main;
+            // insightUrl = this.config.insightServers.btc.main;
             nodeUrl = this.config.nodes.btc.main;
         }
         else {
-            insightUrl = this.config.insightServers.btc.testnet;
+            // insightUrl = this.config.insightServers.btc.testnet;
             nodeUrl = this.config.nodes.btc.testnet;
         }
         return axios({
@@ -233,18 +238,6 @@ class BitcoinAPI extends CryptoAPI_1.CryptoAPI {
         });
     }
     send(chainType, fromAddress, fromPrivateKey, toAddresses, toAmounts) {
-        const axios = require('axios');
-        var total = toAmounts[0];
-        var insightUrl;
-        var nodeUrl;
-        if (chainType == 1) {
-            insightUrl = this.config.insightServers.btc.main;
-            nodeUrl = this.config.nodes.btc.main;
-        }
-        else {
-            insightUrl = this.config.insightServers.btc.testnet;
-            nodeUrl = this.config.nodes.btc.testnet;
-        }
         return this.createTransactionHex(chainType, fromAddress, fromPrivateKey, toAddresses, toAmounts, "").then(txhex => {
             return this.sendTransactionHex(chainType, txhex).then(txid => {
                 return txid;
@@ -257,77 +250,4 @@ class BitcoinAPI extends CryptoAPI_1.CryptoAPI {
     }
 }
 exports.BitcoinAPI = BitcoinAPI;
-// createTransactionHex(chainType: Network, fromAddress: string, fromPrivateKey: string, toAddresses: string[], toAmounts: string[], message: string) {
-// const axios = require('axios');
-// var total = toAmounts[0];
-// var insightUrl : string;
-// var nodeUrl : string;
-// if (chainType == 1) {
-//     insightUrl = this.config.insightServers.btc.main;
-//     nodeUrl = this.config.nodes.btc.main;
-// } else {
-//     insightUrl = this.config.insightServers.btc.testnet;
-//     nodeUrl = this.config.nodes.btc.testnet;
-// }
-// return this.getUnspentTransactions(chainType, fromAddress, String(total)).then(utxos => {
-//     if (utxos) {
-//         if (!fromPrivateKey || toAddresses.length <= 0 || toAddresses.length != toAmounts.length) {
-//             throw new Error(`${this.coin} - Error with send parameters.`);
-//         }
-//         var lUtxos : any[] = [];
-//         for (var i = 0; i < utxos.length; i++) {
-//             var utxoIn = {
-//                 "txId" : utxos[i].txid,
-//                 "outputIndex" : utxos[i].vout,
-//                 "address" : utxos[i].address,
-//                 "script" : utxos[i].scriptPubKey,
-//                 "satoshis" : utxos[i].satoshis
-//             };
-//             lUtxos[i] = utxoIn;
-//         }
-//         try {
-//             var transaction = new this.bitcore.Transaction().from(lUtxos);
-//             var privateKey = new this.bitcore.PrivateKey(fromPrivateKey);
-//         } catch {
-//             throw new Error(`${this.coin} - Error creating private key and transaction.`);
-//         }
-//         for (var i = 0; i < toAddresses.length; i++) {
-//             let inAmount : number = Math.trunc(parseFloat(toAmounts[i]) / 0.00000001);
-//             transaction.to(toAddresses[i], inAmount);
-//         }
-//         try {
-//             transaction.change(fromAddress);
-//             transaction.fee(10000); // fix fees to use function and promise...
-//             transaction.sign(privateKey);
-//         } catch {
-//             throw new Error(`${this.coin} - Error signing raw transaction.`);
-//         }
-//         var txHex : string = transaction.toString();
-//         return axios({
-//             method: 'post',
-//             headers: {
-//               'Content-Type': 'application/json'
-//             },
-//             url: nodeUrl,
-//             data: {
-//               method: 'sendrawtransaction',
-//               'params': [txHex]
-//             }
-//           }).then(response => {
-//             if (response.data.result && response.data.result.error == null) {
-//               return response.data.result;
-//             } else {
-//               let message = {
-//                 message: `Error sending raw transaction: ${this.coin.toUpperCase()} .`,
-//                 data: response,
-//               };
-//               throw new Error(`${this.coin} - Error sending raw transaction. Error  ${JSON.stringify(message)}`);
-//             }
-//           }).catch(error => {
-//             throw new Error(`${this.coin} - Error sending raw transaction.`);
-//           });
-//     } else {
-//         throw new Error(`${this.coin} - Error sending raw transaction.`);
-//     }
-// });
 //# sourceMappingURL=BitcoinAPI.js.map

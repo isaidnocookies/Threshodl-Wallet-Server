@@ -1,7 +1,5 @@
 import { CryptoAPI, Network } from "./CryptoAPI";
 import { Config } from "../config/config";
-import { resolve } from "../../node_modules/@types/bluebird";
-import { parse } from "url";
 
 class BitcoinAPI extends CryptoAPI {
     
@@ -56,7 +54,6 @@ class BitcoinAPI extends CryptoAPI {
     }
 
     getBalance(chainType: Network, address : string) {
-
         var insightUrl : string;
         if (chainType == 1) {
             insightUrl = this.config.insightServers.btc.main;
@@ -100,6 +97,7 @@ class BitcoinAPI extends CryptoAPI {
             if (attempts > 0){
                 return this.getUnspentTransactionsInternal(chainType, address, amount, --attempts);
             }
+            console.log("Error - Get upspent transactions internal failed...");
             return null;
         });
     }
@@ -155,7 +153,6 @@ class BitcoinAPI extends CryptoAPI {
                     lUtxos[i] = utxoIn;
 
                     if (utxoTotal > total + parseFloat(feeEstimate)) {
-                        // if we have enough utxos for the transaction, stop collecting them...
                         break;
                     }
                 }
@@ -177,6 +174,10 @@ class BitcoinAPI extends CryptoAPI {
                 return this.getTransactionFee(chainType, lUtxos.length, toAddresses.length).then(lfee => {
                     var lTxFee : string = String(parseFloat(lfee) / 0.00000001)
 
+                    console.log("utxoTotal " + utxoTotal)
+                    console.log("total " + total)
+                    console.log("lfee " + lfee)
+
                     if (parseFloat(lfee) + total > utxoTotal) {
 
                         if ((utxoTotal - total) > 0 && ((utxoTotal - total) < parseFloat(lfee))) {
@@ -191,6 +192,7 @@ class BitcoinAPI extends CryptoAPI {
                         transaction.fee(parseFloat(lTxFee));
 
                         if (message !== "") {
+                            console.log(`Adding transaction message -- ${this.coin}`)
                             transaction.addData(message);
                         }
 
@@ -211,14 +213,14 @@ class BitcoinAPI extends CryptoAPI {
     sendTransactionHex(chainType: Network, txHex : string) {
         const axios = require('axios');
 
-        var insightUrl : string;
+        // var insightUrl : string;
         var nodeUrl : string;
 
         if (chainType == 1) {
-            insightUrl = this.config.insightServers.btc.main;
+            // insightUrl = this.config.insightServers.btc.main;
             nodeUrl = this.config.nodes.btc.main;
         } else {
-            insightUrl = this.config.insightServers.btc.testnet;
+            // insightUrl = this.config.insightServers.btc.testnet;
             nodeUrl = this.config.nodes.btc.testnet;
         }
 
@@ -248,20 +250,6 @@ class BitcoinAPI extends CryptoAPI {
     }
 
     send(chainType: Network, fromAddress: string, fromPrivateKey: string, toAddresses: string[], toAmounts: string[]) {
-        const axios = require('axios');
-        var total = toAmounts[0];
-
-        var insightUrl : string;
-        var nodeUrl : string;
-
-        if (chainType == 1) {
-            insightUrl = this.config.insightServers.btc.main;
-            nodeUrl = this.config.nodes.btc.main;
-        } else {
-            insightUrl = this.config.insightServers.btc.testnet;
-            nodeUrl = this.config.nodes.btc.testnet;
-        }
-        
         return this.createTransactionHex(chainType, fromAddress, fromPrivateKey, toAddresses, toAmounts, "").then(txhex => {
             return this.sendTransactionHex(chainType, txhex).then(txid => {
                 return txid;
@@ -275,120 +263,3 @@ class BitcoinAPI extends CryptoAPI {
 }
 
 export { BitcoinAPI, Network };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      // createTransactionHex(chainType: Network, fromAddress: string, fromPrivateKey: string, toAddresses: string[], toAmounts: string[], message: string) {
-        
-        // const axios = require('axios');
-        // var total = toAmounts[0];
-
-        // var insightUrl : string;
-        // var nodeUrl : string;
-
-        // if (chainType == 1) {
-        //     insightUrl = this.config.insightServers.btc.main;
-        //     nodeUrl = this.config.nodes.btc.main;
-        // } else {
-        //     insightUrl = this.config.insightServers.btc.testnet;
-        //     nodeUrl = this.config.nodes.btc.testnet;
-        // }
-
-        // return this.getUnspentTransactions(chainType, fromAddress, String(total)).then(utxos => {
-        //     if (utxos) {
-        //         if (!fromPrivateKey || toAddresses.length <= 0 || toAddresses.length != toAmounts.length) {
-        //             throw new Error(`${this.coin} - Error with send parameters.`);
-        //         }
-
-        //         var lUtxos : any[] = [];
-        //         for (var i = 0; i < utxos.length; i++) {
-        //             var utxoIn = {
-        //                 "txId" : utxos[i].txid,
-        //                 "outputIndex" : utxos[i].vout,
-        //                 "address" : utxos[i].address,
-        //                 "script" : utxos[i].scriptPubKey,
-        //                 "satoshis" : utxos[i].satoshis
-        //             };
-        //             lUtxos[i] = utxoIn;
-        //         }
-
-        //         try {
-        //             var transaction = new this.bitcore.Transaction().from(lUtxos);
-        //             var privateKey = new this.bitcore.PrivateKey(fromPrivateKey);
-        //         } catch {
-        //             throw new Error(`${this.coin} - Error creating private key and transaction.`);
-        //         }
-                
-        //         for (var i = 0; i < toAddresses.length; i++) {
-        //             let inAmount : number = Math.trunc(parseFloat(toAmounts[i]) / 0.00000001);
-        //             transaction.to(toAddresses[i], inAmount);
-        //         }
-                
-        //         try {
-        //             transaction.change(fromAddress);
-        //             transaction.fee(10000); // fix fees to use function and promise...
-        //             transaction.sign(privateKey);
-        //         } catch {
-        //             throw new Error(`${this.coin} - Error signing raw transaction.`);
-        //         }
-
-        //         var txHex : string = transaction.toString();
-        //         return axios({
-        //             method: 'post',
-        //             headers: {
-        //               'Content-Type': 'application/json'
-        //             },
-        //             url: nodeUrl,
-        //             data: {
-        //               method: 'sendrawtransaction',
-        //               'params': [txHex]
-        //             }
-        //           }).then(response => {
-        //             if (response.data.result && response.data.result.error == null) {
-        //               return response.data.result;
-        //             } else {
-        //               let message = {
-        //                 message: `Error sending raw transaction: ${this.coin.toUpperCase()} .`,
-        //                 data: response,
-        //               };
-        //               throw new Error(`${this.coin} - Error sending raw transaction. Error  ${JSON.stringify(message)}`);
-        //             }
-        //           }).catch(error => {
-        //             throw new Error(`${this.coin} - Error sending raw transaction.`);
-        //           });
-        //     } else {
-        //         throw new Error(`${this.coin} - Error sending raw transaction.`);
-        //     }
-        // });
