@@ -6,15 +6,18 @@ import { Routes } from "./routes/routes";
 import { UserAccountRoutes } from "./routes/userAccountRoutes";
 import { WalletRoutes } from "./routes/walletRoutes";
 import { Config } from "./config/config";
-// import { DarkRoutes } from "./routes/darkRoutes";
+import { DarkRoutes } from "./routes/darkRoutes";
 
 class App {
     public app: express.Application;
 
     public configuration : any = new Config();
+
     public baseRoutes: Routes = new Routes();
     public userAccountRoutes: UserAccountRoutes = new UserAccountRoutes();
     public walletRoutes: WalletRoutes = new WalletRoutes();
+    public darkRoutes: DarkRoutes = new DarkRoutes();
+
     public mongoUrl : string = (this.configuration.localEnvironment ? this.configuration.db.test.url : this.configuration.db.production.url);
 
     constructor() {
@@ -25,6 +28,7 @@ class App {
         this.baseRoutes.routes(this.app);
         this.userAccountRoutes.routes(this.app);
         this.walletRoutes.routes(this.app);
+        this.darkRoutes.routes(this.app);
     }
     
     private config(): void {

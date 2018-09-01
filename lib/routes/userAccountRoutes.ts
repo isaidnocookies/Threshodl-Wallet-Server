@@ -5,9 +5,6 @@ export class UserAccountRoutes {
     public routes (app) : any {
         app.route('/userAccount/').get((req: Request, res: Response) => {
             var userAccount : any = new UserAccount;
-
-            userAccount.createAccountKeys("giant defense lens very flavor few poverty secret fitness lounge skirt grain");
-
             res.status(200).send({message: "User account says, hello world!"})
         })
 
@@ -28,6 +25,8 @@ export class UserAccountRoutes {
                     lPublicKey = "";
                 }
                 res.send(JSON.stringify({success: success, username: lUsername, seed: lSeed, publicKey: lPublicKey, privateKey: lPrivateKey}));
+            }).catch((error) => {
+                res.send(JSON.stringify({success: false, message: `${error}`}));
             });
         });
 
@@ -47,7 +46,9 @@ export class UserAccountRoutes {
                     success = true;
                 }
                 res.send(JSON.stringify({success: success, username: username, seed: lSeed, publicKey: lPublicKey, privateKey: lPrivateKey}));
-            })
+            }).catch((error) => {
+                res.send(JSON.stringify({success: false, message: `${error}`}));
+            });
         });
 
         app.post('/userAccount/accountExists/', (req: Request, res: Response) => {
@@ -56,7 +57,9 @@ export class UserAccountRoutes {
 
             userAccount.checkUsername(lUsername).then(isFound => {
                 res.status(200).send(JSON.stringify({success: isFound}));
-            });
+            }).catch((error) => {
+                res.send(JSON.stringify({success: false, message: `${error}`}));
+            });;
         });
 
         app.post('/userAccount/signMessage/', (req: Request, res: Response) => {

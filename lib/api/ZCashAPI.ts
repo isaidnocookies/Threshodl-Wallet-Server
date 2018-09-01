@@ -29,7 +29,7 @@ class ZCashAPI extends CryptoAPI {
             var hash = this.zcashcore.crypto.Hash.sha256(theSeedValue);
             var bn = this.zcashcore.crypto.BN.fromBuffer(hash);
 
-            newPrivateKey = new this.zcashcore.PrivateKey(bn);
+            newPrivateKey = new this.zcashcore.PrivateKey(bn,network);
             fromSeed = true;
         } else if (success) {
             newPrivateKey = new this.zcashcore.PrivateKey.fromRandom(network);

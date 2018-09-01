@@ -30,7 +30,7 @@ class BitcoinAPI extends CryptoAPI {
             var hash = this.bitcore.crypto.Hash.sha256(theSeedValue);
             var bn = this.bitcore.crypto.BN.fromBuffer(hash);
 
-            newPrivateKey = new this.bitcore.PrivateKey(bn);
+            newPrivateKey = new this.bitcore.PrivateKey(bn,network);
             fromSeed = true;
         } else if (success) {
             newPrivateKey = new this.bitcore.PrivateKey.fromRandom(network);
@@ -173,10 +173,6 @@ class BitcoinAPI extends CryptoAPI {
 
                 return this.getTransactionFee(chainType, lUtxos.length, toAddresses.length).then(lfee => {
                     var lTxFee : string = String(parseFloat(lfee) / 0.00000001)
-
-                    console.log("utxoTotal " + utxoTotal)
-                    console.log("total " + total)
-                    console.log("lfee " + lfee)
 
                     if (parseFloat(lfee) + total > utxoTotal) {
 

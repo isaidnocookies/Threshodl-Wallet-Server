@@ -29,7 +29,7 @@ class LitecoinAPI extends CryptoAPI {
             var hash = this.litecore.crypto.Hash.sha256(theSeedValue);
             var bn = this.litecore.crypto.BN.fromBuffer(hash);
 
-            newPrivateKey = new this.litecore.PrivateKey(bn);
+            newPrivateKey = new this.litecore.PrivateKey(bn,network);
             fromSeed = true;
         } else if (success) {
             newPrivateKey = new this.litecore.PrivateKey.fromRandom(network);

@@ -10,12 +10,14 @@ class WalletRoutes {
         app.route('/wallets/').get((req, res) => {
             res.status(200).send({ message: "Wallets api ping" });
         });
+        app.post('/wallets/testing/', (req, res) => {
+            res.status(200).send({ message: "Wallet testing call" });
+        });
         app.post('/wallets/create/', (req, res) => {
             let api;
             var coins = req.body.coins;
             var seed = req.body.seed;
             var numberOfCoins = coins.length;
-            var network = req.body.network;
             if (numberOfCoins <= 0) {
                 res.send(JSON.stringify({ success: false, message: "No coins specified" }));
             }
@@ -23,6 +25,17 @@ class WalletRoutes {
                 var newWallets = new Object();
                 for (var i = 0; i < numberOfCoins; i++) {
                     var coin = coins[i];
+                    var theCoinPrefix;
+                    var network;
+                    if (coin.charAt(0) === "t") {
+                        network = 2;
+                        coin = coin.substring(1, coin.length);
+                        theCoinPrefix = "t";
+                    }
+                    else {
+                        network = 1;
+                        theCoinPrefix = "";
+                    }
                     switch (coin) {
                         case 'BTC':
                             api = new BitcoinAPI_1.BitcoinAPI;
@@ -43,7 +56,7 @@ class WalletRoutes {
                             newWallets[coin] = { "address": "", "privateKey": "", "wif": "", "fromSeed": false };
                             continue;
                     }
-                    newWallets[coin] = api.createWallet(network, seed);
+                    newWallets[theCoinPrefix + coin] = api.createWallet(network, seed);
                     api = null;
                 }
             }
@@ -53,8 +66,15 @@ class WalletRoutes {
             var address = req.body.address;
             var amount = req.body.amount;
             var coin = req.body.coin;
-            var network = req.body.network;
+            var network;
             let api;
+            if (coin.charAt(0) === "t") {
+                network = 2;
+                coin = coin.substring(1, coin.length);
+            }
+            else {
+                network = 1;
+            }
             switch (coin) {
                 case 'BTC':
                     api = new BitcoinAPI_1.BitcoinAPI;
@@ -75,20 +95,29 @@ class WalletRoutes {
                     res.status(401).send(JSON.stringify({ success: false }));
                     return;
             }
-            return api.getUnspentTransactions(network, address, amount).then(utxos => {
+            api.getUnspentTransactions(network, address, amount).then(utxos => {
                 if (utxos) {
                     res.status(200).send(JSON.stringify({ success: true, response: JSON.stringify(utxos) }));
                 }
                 else {
                     res.status(400).send(JSON.stringify({ success: false }));
                 }
+            }).catch((error) => {
+                res.status(400).send(JSON.stringify({ success: false, message: `${error}` }));
             });
         });
         app.post('/wallets/balance/', (req, res) => {
             var address = req.body.address;
             var coin = req.body.coin;
-            var network = req.body.network;
+            var network;
             let api;
+            if (coin.charAt(0) === "t") {
+                network = 2;
+                coin = coin.substring(1, coin.length);
+            }
+            else {
+                network = 1;
+            }
             switch (coin) {
                 case 'BTC':
                     api = new BitcoinAPI_1.BitcoinAPI;
@@ -109,19 +138,30 @@ class WalletRoutes {
                     res.status(401).send(JSON.stringify({ success: false }));
                     return;
             }
-            return api.getBalance(network, address).then(utxos => {
+            api.getBalance(network, address).then(utxos => {
                 if (utxos) {
                     res.status(200).send(JSON.stringify({ success: true, response: JSON.stringify(utxos) }));
                 }
                 else {
                     res.status(400).send(JSON.stringify({ success: false }));
                 }
+            }).catch((error) => {
+                res.status(400).send(JSON.stringify({ success: false, message: `${error}` }));
             });
         });
         app.post('/wallets/txFee/', (req, res) => {
             var coin = req.body.coin;
-            var network = req.body.network;
+            var network;
+            var inputs = req.body.inputs;
+            var outputs = req.body.outputs;
             let api;
+            if (coin.charAt(0) === "t") {
+                network = 2;
+                coin = coin.substring(1, coin.length);
+            }
+            else {
+                network = 1;
+            }
             switch (coin) {
                 case 'BTC':
                     api = new BitcoinAPI_1.BitcoinAPI;
@@ -142,23 +182,32 @@ class WalletRoutes {
                     res.status(401).send(JSON.stringify({ success: false }));
                     return;
             }
-            return api.getTransactionFee(network, 1, 1).then(fee => {
+            api.getTransactionFee(network, inputs, outputs).then(fee => {
                 if (fee >= 0) {
                     res.status(200).send(JSON.stringify({ success: true, fee: fee }));
                 }
                 else {
                     res.status(400).send(JSON.stringify({ success: false }));
                 }
+            }).catch((error) => {
+                res.status(200).send(JSON.stringify({ success: false, message: `${error}` }));
             });
         });
         app.post('/wallets/send/', (req, res) => {
             var coin = req.body.coin;
-            var network = req.body.network;
+            var network;
             var fromAddress = req.body.fromAddress;
             var fromPrivateKey = req.body.fromPrivateKey;
             var toAddresses = req.body.toAddresses;
             var toAmounts = req.body.toAmounts;
             let api;
+            if (coin.charAt(0) === "t") {
+                network = 2;
+                coin = coin.substring(1, coin.length);
+            }
+            else {
+                network = 1;
+            }
             switch (coin) {
                 case 'BTC':
                     api = new BitcoinAPI_1.BitcoinAPI;
@@ -179,20 +228,29 @@ class WalletRoutes {
                     res.status(401).send(JSON.stringify({ success: false }));
                     return;
             }
-            return api.send(network, fromAddress, fromPrivateKey, toAddresses, toAmounts).then(txReturn => {
+            api.send(network, fromAddress, fromPrivateKey, toAddresses, toAmounts).then(txReturn => {
                 // TODO : handle errors
                 res.status(200).send(JSON.stringify({ success: true, txid: txReturn }));
+            }).catch((error) => {
+                res.status(200).send(JSON.stringify({ success: false, message: `${error}` }));
             });
         });
         app.post('/wallets/createTransaction/', (req, res) => {
             var coin = req.body.coin;
-            var network = req.body.network;
+            var network;
             var fromAddress = req.body.fromAddress;
             var fromPrivateKey = req.body.fromPrivateKey;
             var toAddresses = req.body.toAddresses;
             var toAmounts = req.body.toAmounts;
             var message = req.body.message;
             let api;
+            if (coin.charAt(0) === "t") {
+                network = 2;
+                coin = coin.substring(1, coin.length);
+            }
+            else {
+                network = 1;
+            }
             switch (coin) {
                 case 'BTC':
                     api = new BitcoinAPI_1.BitcoinAPI;
@@ -215,7 +273,7 @@ class WalletRoutes {
             }
             var lSuccess;
             var lReturn;
-            return api.createTransactionHex(network, fromAddress, fromPrivateKey, toAddresses, toAmounts, message).then(txReturn => {
+            api.createTransactionHex(network, fromAddress, fromPrivateKey, toAddresses, toAmounts, message).then(txReturn => {
                 // TODO : handle errors
                 lReturn = txReturn;
                 if (lReturn === "") {
@@ -225,13 +283,24 @@ class WalletRoutes {
                     lSuccess = true;
                 }
                 res.status(200).send(JSON.stringify({ success: lSuccess, message: lReturn }));
+                return;
+            }).catch((error) => {
+                console.log(`Error on createTransactionHex: ${error}`);
+                res.status(200).send(JSON.stringify({ success: false, message: `${error}` }));
             });
         });
         app.post('/wallets/sendRawTransaction/', (req, res) => {
             var coin = req.body.coin;
-            var network = req.body.network;
+            var network;
             var rawTransactoinHex = req.body.tx;
             let api;
+            if (coin.charAt(0) === "t") {
+                network = 2;
+                coin = coin.substring(1, coin.length);
+            }
+            else {
+                network = 1;
+            }
             switch (coin) {
                 case 'BTC':
                     api = new BitcoinAPI_1.BitcoinAPI;
@@ -254,7 +323,7 @@ class WalletRoutes {
             }
             var lSuccess;
             var lTxid;
-            return api.sendTransactionHex(network, rawTransactoinHex).then(txReturn => {
+            api.sendTransactionHex(network, rawTransactoinHex).then(txReturn => {
                 // TODO : handle errors
                 lTxid = txReturn;
                 if (lTxid === "") {
@@ -264,6 +333,8 @@ class WalletRoutes {
                     lSuccess = true;
                 }
                 res.status(200).send(JSON.stringify({ success: lSuccess, txid: lTxid }));
+            }).catch((error) => {
+                res.status(200).send(JSON.stringify({ success: false, message: `${error}` }));
             });
         });
     }

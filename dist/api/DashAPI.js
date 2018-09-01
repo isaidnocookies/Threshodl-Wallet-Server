@@ -38,7 +38,7 @@ class DashAPI extends CryptoAPI_1.CryptoAPI {
             var theSeedValue = Buffer.from(seed);
             var hash = this.dashcore.crypto.Hash.sha256(theSeedValue);
             var bn = this.dashcore.crypto.BN.fromBuffer(hash);
-            newPrivateKey = new this.dashcore.PrivateKey(bn);
+            newPrivateKey = new this.dashcore.PrivateKey(bn, network);
             fromSeed = true;
         }
         else if (success) {

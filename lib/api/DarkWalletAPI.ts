@@ -11,11 +11,60 @@ class DarkWallet {
     }
 
     getBreakValues(totalToBreak : string) {
+        var finalValues : string[];
+        var valuesToBreak : string[] = [];
 
+        //break totalToBreak down into 'single non-zero digit' numbers
+        for (var i = 0; i < totalToBreak.length - 1; i++) {
+            var temp : string = this.extractNonZeroDigit(totalToBreak, i);
+            valuesToBreak.push(temp);
+        }
+
+        return finalValues = valuesToBreak;
     }
 
     splitValues(value : string) {
 
+    }
+
+    extractNonZeroDigit(value : string, nonZeroIndex : number) {
+        var returnValue : string = value;
+
+        for (var i = 0; i < value.length; i++) {
+            if(returnValue.charAt(i) !== '.' && returnValue.charAt(i) !== '0') {
+                if (i != nonZeroIndex) {
+                    returnValue = returnValue.substr(0, i) + "0" + returnValue.substr(i + 1);
+                }
+            }
+        }
+        return this.cleanUpValueString(returnValue);
+    }
+
+    cleanUpValueString(value : string) {
+        var returnValue : string = value;
+        var index : number = 0;
+        // remove leading zeros
+        while(returnValue.charAt(index) === '0') {
+            index++;
+        }
+        returnValue = returnValue.substr(index);
+
+        //remove trailing zeros
+        index = returnValue.length - 1;
+        while (returnValue.charAt(index) === '0') {
+            index--;
+        }
+        returnValue = returnValue.substring(0, index);
+
+        if (returnValue.charAt(0) === '.') {
+            returnValue = "0" + returnValue;
+        }
+
+        if (!returnValue.includes('.') || returnValue.charAt(returnValue.length-1) === '.') {
+            returnValue = returnValue + ".00";
+        }
+
+        return returnValue;
     }
 }
 

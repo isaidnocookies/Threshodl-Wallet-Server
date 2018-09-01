@@ -39,7 +39,7 @@ class BitcoinAPI extends CryptoAPI_1.CryptoAPI {
             var theSeedValue = Buffer.from(seed);
             var hash = this.bitcore.crypto.Hash.sha256(theSeedValue);
             var bn = this.bitcore.crypto.BN.fromBuffer(hash);
-            newPrivateKey = new this.bitcore.PrivateKey(bn);
+            newPrivateKey = new this.bitcore.PrivateKey(bn, network);
             fromSeed = true;
         }
         else if (success) {
@@ -149,7 +149,6 @@ class BitcoinAPI extends CryptoAPI_1.CryptoAPI {
                         utxoTotal = utxoTotal + parseFloat(utxos[i]);
                         lUtxos[i] = utxoIn;
                         if (utxoTotal > total + parseFloat(feeEstimate)) {
-                            // if we have enough utxos for the transaction, stop collecting them...
                             break;
                         }
                     }
@@ -167,9 +166,6 @@ class BitcoinAPI extends CryptoAPI_1.CryptoAPI {
                     }
                     return this.getTransactionFee(chainType, lUtxos.length, toAddresses.length).then(lfee => {
                         var lTxFee = String(parseFloat(lfee) / 0.00000001);
-                        console.log("utxoTotal " + utxoTotal);
-                        console.log("total " + total);
-                        console.log("lfee " + lfee);
                         if (parseFloat(lfee) + total > utxoTotal) {
                             if ((utxoTotal - total) > 0 && ((utxoTotal - total) < parseFloat(lfee))) {
                                 lTxFee = String(utxoTotal - total);

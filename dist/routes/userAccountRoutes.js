@@ -5,7 +5,6 @@ class UserAccountRoutes {
     routes(app) {
         app.route('/userAccount/').get((req, res) => {
             var userAccount = new UserAccount_1.UserAccount;
-            userAccount.createAccountKeys("giant defense lens very flavor few poverty secret fitness lounge skirt grain");
             res.status(200).send({ message: "User account says, hello world!" });
         });
         app.post('/userAccount/create/', (req, res) => {
@@ -23,6 +22,8 @@ class UserAccountRoutes {
                     lPublicKey = "";
                 }
                 res.send(JSON.stringify({ success: success, username: lUsername, seed: lSeed, publicKey: lPublicKey, privateKey: lPrivateKey }));
+            }).catch((error) => {
+                res.send(JSON.stringify({ success: false, message: `${error}` }));
             });
         });
         app.post('/userAccount/recover/', (req, res) => {
@@ -44,6 +45,8 @@ class UserAccountRoutes {
                     success = true;
                 }
                 res.send(JSON.stringify({ success: success, username: username, seed: lSeed, publicKey: lPublicKey, privateKey: lPrivateKey }));
+            }).catch((error) => {
+                res.send(JSON.stringify({ success: false, message: `${error}` }));
             });
         });
         app.post('/userAccount/accountExists/', (req, res) => {
@@ -51,7 +54,10 @@ class UserAccountRoutes {
             var lUsername = req.body.username;
             userAccount.checkUsername(lUsername).then(isFound => {
                 res.status(200).send(JSON.stringify({ success: isFound }));
+            }).catch((error) => {
+                res.send(JSON.stringify({ success: false, message: `${error}` }));
             });
+            ;
         });
         app.post('/userAccount/signMessage/', (req, res) => {
             // TODO...
