@@ -1,6 +1,6 @@
 export class Config
 {
-    localEnvironment : boolean = false;
+    localEnvironment : boolean = true;
 
     db : any = {
         production : {

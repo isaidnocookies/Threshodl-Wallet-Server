@@ -13,9 +13,11 @@ class DarkWallet {
         var finalValues;
         var valuesToBreak = [];
         //break totalToBreak down into 'single non-zero digit' numbers
-        for (var i = 0; i < totalToBreak.length - 1; i++) {
+        for (var i = 0; i < totalToBreak.length; i++) {
             var temp = this.extractNonZeroDigit(totalToBreak, i);
-            valuesToBreak.push(temp);
+            if (temp !== "-1") {
+                valuesToBreak.push(temp);
+            }
         }
         return finalValues = valuesToBreak;
     }
@@ -23,14 +25,23 @@ class DarkWallet {
     }
     extractNonZeroDigit(value, nonZeroIndex) {
         var returnValue = value;
+        var hasNonZeroValue = false;
         for (var i = 0; i < value.length; i++) {
-            if (returnValue.charAt(i) !== '.' && returnValue.charAt(i) !== '0') {
-                if (i != nonZeroIndex) {
-                    returnValue = returnValue.substr(0, i) + "0" + returnValue.substr(i + 1);
+            if (returnValue.charAt(i) !== '.') {
+                if (returnValue.charAt(i) !== '0') {
+                    if (i !== nonZeroIndex) {
+                        returnValue = returnValue.substr(0, i) + "0" + returnValue.substr(i + 1);
+                    }
+                    else {
+                        hasNonZeroValue = true;
+                    }
                 }
             }
         }
-        return this.cleanUpValueString(returnValue);
+        if (hasNonZeroValue) {
+            return this.cleanUpValueString(returnValue);
+        }
+        return "-1";
     }
     cleanUpValueString(value) {
         var returnValue = value;
@@ -41,16 +52,19 @@ class DarkWallet {
         }
         returnValue = returnValue.substr(index);
         //remove trailing zeros
-        index = returnValue.length - 1;
-        while (returnValue.charAt(index) === '0') {
+        index = returnValue.length;
+        while (returnValue.charAt(index - 1) === '0') {
             index--;
         }
         returnValue = returnValue.substring(0, index);
         if (returnValue.charAt(0) === '.') {
             returnValue = "0" + returnValue;
         }
-        if (!returnValue.includes('.') || returnValue.charAt(returnValue.length - 1) === '.') {
+        if (!returnValue.includes('.')) {
             returnValue = returnValue + ".00";
+        }
+        if (returnValue.charAt(returnValue.length - 1) === '.') {
+            returnValue = returnValue + "00";
         }
         return returnValue;
     }

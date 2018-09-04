@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 class Config {
     constructor() {
-        this.localEnvironment = false;
+        this.localEnvironment = true;
         this.db = {
             production: {
                 url: "mongodb+srv://thdlDev:pass123!@thdldev-pdprj.mongodb.net/thdlDev?retryWrites=true"
