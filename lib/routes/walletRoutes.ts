@@ -24,11 +24,11 @@ export class WalletRoutes {
             var coins : string[] = req.body.coins;
             var seed : string = req.body.seed;
             var numberOfCoins : number = coins.length;
+            var newWallets = new Object();
             
             if (numberOfCoins <= 0) {
                 res.send(JSON.stringify({success: false, message: "No coins specified"}));
             } else {
-                var newWallets = new Object();
                 for (var i = 0; i < numberOfCoins; i++) {
                     var coin = coins[i];
                     var theCoinPrefix : string;

@@ -1,6 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const DarkWalletAPI_1 = require("../api/DarkWalletAPI");
+const BitcoinAPI_1 = require("../api/BitcoinAPI");
+const ZCashAPI_1 = require("../api/ZCashAPI");
+const LitecoinAPI_1 = require("../api/LitecoinAPI");
+const DashAPI_1 = require("../api/DashAPI");
+const DogecoinAPI_1 = require("../api/DogecoinAPI");
 class DarkRoutes {
     routes(app) {
         app.route('/dark/').get((req, res) => {
@@ -8,7 +13,82 @@ class DarkRoutes {
         });
         app.post('/dark/', (req, res) => {
             var darkWallet = new DarkWalletAPI_1.DarkWallet();
-            res.status(200).send({ value: darkWallet.getBreakValues(req.body.value) });
+            res.status(200).send({ values: darkWallet.getBreakValues(req.body.value) });
+        });
+        app.post('/dark/createWallets/', (req, res) => {
+            var darkWallet = new DarkWalletAPI_1.DarkWallet();
+            var coin = req.body.coin;
+            var coinPrefix;
+            var network;
+            var amount = req.body.value;
+            var amountMinusFee;
+            var breakEstimation = darkWallet.estimateBreaks(amount);
+            var walletValues;
+            var walletReturn = new Object();
+            let api;
+            if (coin.charAt(0) === "t") {
+                network = 2;
+                coin = coin.substring(1, coin.length);
+                coinPrefix = "t";
+            }
+            else {
+                network = 1;
+                coinPrefix = "";
+            }
+            switch (coin) {
+                case 'BTC':
+                    api = new BitcoinAPI_1.BitcoinAPI;
+                    break;
+                case 'LTC':
+                    api = new LitecoinAPI_1.LitecoinAPI;
+                    break;
+                case 'DASH':
+                    api = new DashAPI_1.DashAPI;
+                    break;
+                case 'ZEC':
+                    api = new ZCashAPI_1.ZCashAPI;
+                    break;
+                case 'DOGE':
+                    api = new DogecoinAPI_1.DogecoinAPI;
+                    break;
+                default:
+                    res.status(401).send(JSON.stringify({ success: false }));
+                    return;
+            }
+            api.getTransactionFee(network, 1, breakEstimation).then(fee => {
+                amountMinusFee = (parseFloat(amount) - parseFloat(fee)).toString();
+                walletValues = darkWallet.getBreakValues(amountMinusFee);
+                for (var i = 0; i < walletValues.length; i++) {
+                    let creatorApi;
+                    switch (coin) {
+                        case 'BTC':
+                            creatorApi = new BitcoinAPI_1.BitcoinAPI;
+                            break;
+                        case 'LTC':
+                            creatorApi = new LitecoinAPI_1.LitecoinAPI;
+                            break;
+                        case 'DASH':
+                            creatorApi = new DashAPI_1.DashAPI;
+                            break;
+                        case 'ZEC':
+                            creatorApi = new ZCashAPI_1.ZCashAPI;
+                            break;
+                        case 'DOGE':
+                            creatorApi = new DogecoinAPI_1.DogecoinAPI;
+                            break;
+                        default:
+                            res.status(401).send(JSON.stringify({ success: false }));
+                            return;
+                    }
+                    var wallet = creatorApi.createWallet(network, "");
+                    var splitKeys = darkWallet.splitPrivateKey(wallet.privateKey.toString());
+                    console.log(wallet.privateKey.toString());
+                    console.log(darkWallet.combinePrivateKey(splitKeys.user, splitKeys.server));
+                    walletReturn[i] = { address: wallet.address, privateKey: splitKeys.user, value: walletValues[i] };
+                    creatorApi = null;
+                }
+                res.status(200).send({ success: true, coin: (coinPrefix + coin), wallets: walletReturn });
+            });
         });
         app.post('/dark/getBreaks/', (req, res) => {
             var inputAmount = req.body.amount;

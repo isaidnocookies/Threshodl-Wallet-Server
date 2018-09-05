@@ -26,10 +26,10 @@ class BitcoinAPI extends CryptoAPI_1.CryptoAPI {
         var fromSeed;
         var network;
         var success = true;
-        if (chainType == CryptoAPI_1.Network.Mainnet) {
+        if (chainType === CryptoAPI_1.Network.Mainnet) {
             network = this.bitcore.Networks.livenet;
         }
-        else if (chainType == CryptoAPI_1.Network.Testnet) {
+        else if (chainType === CryptoAPI_1.Network.Testnet) {
             network = this.bitcore.Networks.testnet;
         }
         else {

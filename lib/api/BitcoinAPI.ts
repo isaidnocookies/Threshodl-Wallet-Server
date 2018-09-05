@@ -17,9 +17,9 @@ class BitcoinAPI extends CryptoAPI {
         var network: any;
         var success: boolean = true;
 
-        if (chainType == Network.Mainnet) {
+        if (chainType === Network.Mainnet) {
             network = this.bitcore.Networks.livenet;
-        } else if (chainType == Network.Testnet) {
+        } else if (chainType === Network.Testnet) {
             network = this.bitcore.Networks.testnet;
         } else {
             success = false;
@@ -30,7 +30,7 @@ class BitcoinAPI extends CryptoAPI {
             var hash = this.bitcore.crypto.Hash.sha256(theSeedValue);
             var bn = this.bitcore.crypto.BN.fromBuffer(hash);
 
-            newPrivateKey = new this.bitcore.PrivateKey(bn,network);
+            newPrivateKey = new this.bitcore.PrivateKey(bn, network);
             fromSeed = true;
         } else if (success) {
             newPrivateKey = new this.bitcore.PrivateKey.fromRandom(network);
