@@ -13,14 +13,31 @@ class DarkRoutes {
         });
         app.post('/dark/', (req, res) => {
             var darkWallet = new DarkWalletAPI_1.DarkWallet();
-            res.status(200).send({ values: darkWallet.getBreakValues(req.body.value) });
+            var uid = req.body.uid;
+            darkWallet.returnMicroWalletAndDelete(uid).then(wallet => {
+                console.log(wallet);
+                res.status(200).send({ message: "Testing.... passed" });
+            }).catch(err => {
+                console.log(err);
+                res.status(200).send({ message: "Testing.... failed" });
+            });
+            // darkWallet.deleteMicroWallet(uid).then(success => {
+            //     if (success) {
+            //         console.log("Delete Successful!")
+            //     } else {
+            //         console.log("Delete Failed...");
+            //     }
+            //     res.status(200).send({message: "Testing...."})
+            // });
+            // res.status(200).send({values: darkWallet.getBreakValues(req.body.value)})
         });
         app.post('/dark/createWallets/', (req, res) => {
             var darkWallet = new DarkWalletAPI_1.DarkWallet();
             var coin = req.body.coin;
+            var amount = req.body.value;
+            var owner = req.body.owner;
             var coinPrefix;
             var network;
-            var amount = req.body.value;
             var amountMinusFee;
             var breakEstimation = darkWallet.estimateBreaks(amount);
             var walletValues;
@@ -82,10 +99,10 @@ class DarkRoutes {
                     }
                     var wallet = creatorApi.createWallet(network, "");
                     var splitKeys = darkWallet.splitPrivateKey(wallet.privateKey.toString());
-                    console.log(wallet.privateKey.toString());
-                    console.log(darkWallet.combinePrivateKey(splitKeys.user, splitKeys.server));
                     walletReturn[i] = { address: wallet.address, privateKey: splitKeys.user, value: walletValues[i] };
                     creatorApi = null;
+                    // save wallets to db...
+                    darkWallet.saveMicroWallet(owner, wallet.address, splitKeys.server, splitKeys.user);
                 }
                 res.status(200).send({ success: true, coin: (coinPrefix + coin), wallets: walletReturn });
             });

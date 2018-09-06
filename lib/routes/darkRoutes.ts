@@ -17,15 +17,18 @@ export class DarkRoutes {
 
         app.post('/dark/', (req: Request, res: Response) => {
             var darkWallet : DarkWallet = new DarkWallet();
-            res.status(200).send({values: darkWallet.getBreakValues(req.body.value)})
+            var uid : string = req.body.uid;
+            
+            res.status(200).send({message: "Testing...."});
         });
 
         app.post('/dark/createWallets/', (req: Request, res: Response) => {
             var darkWallet : DarkWallet = new DarkWallet();
             var coin : string = req.body.coin;
+            var amount : string = req.body.value;
+            var owner : string = req.body.owner;
             var coinPrefix : string;
             var network : number;
-            var amount : string = req.body.value;
             var amountMinusFee : string;
             var breakEstimation : number = darkWallet.estimateBreaks(amount);
             var walletValues : string[];
@@ -76,10 +79,11 @@ export class DarkRoutes {
 
                     walletReturn[i] = {address: wallet.address, privateKey: splitKeys.user, value: walletValues[i]};
                     creatorApi = null;
+
+                    // save wallets to db...
+                    darkWallet.saveMicroWallet(owner, wallet.address, splitKeys.server, splitKeys.user);
                 }
 
-                // save wallets to db...
-                
                 res.status(200).send({success: true, coin: (coinPrefix + coin), wallets: walletReturn})
             });
         });
