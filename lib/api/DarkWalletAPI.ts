@@ -245,9 +245,9 @@ class DarkWallet {
         return success;
     }
 
-    confirmOwnershipOfMicroWallet(owner : string, uid : string) {
+    async confirmOwnershipOfMicroWallet(owner : string, uid : string) {
         var MicroWalletObject : any = mongoose.model('MicroWalletObject', MicroWalletSchema);
-        return MicroWalletObject.find({uniqueId : uid}).then(docs => {
+        return await MicroWalletObject.find({uniqueId : uid}).then(docs => {
             if (docs.length) {
                 if (docs[0].owner === owner) {
                     return true;
@@ -281,6 +281,64 @@ class DarkWallet {
                 }
             }
         });
+    }
+
+    async confirmMicroWalletTransfer(uid : string) {
+        var MicroWalletObject : any = mongoose.model('MicroWalletObject', MicroWalletSchema);
+        return await MicroWalletObject.find({uniqueId : uid}).then((query, err) => {
+            if (query === null) {
+                console.log("Transfer failed. UID not found..  Error: " + err)
+                return false;
+            } else {
+                query[0].previousOwner = "";
+                return query[0].save().then(() => {
+                    return true;
+                }).catch(() => {
+                    console.log("caught by confirmation of transfer....");
+                    return false;
+                });
+               
+            }
+        });
+    }
+    
+    async revertMicroWalletTransfer(uid : string) {
+        var MicroWalletObject : any = mongoose.model('MicroWalletObject', MicroWalletSchema);
+        return await MicroWalletObject.find({uniqueId : uid}).then((query, err) => {
+            if (query === null) {
+                console.log("revert failed. UID not found..  Error: " + err)
+                return false;
+            } else {
+                query[0].owner = query[0].previousOwner;
+                query[0].previousOwner = "";
+                return query[0].save().then(() => {
+                    return true;
+                }).catch(() => {
+                    console.log("caught by confirmation of transfer....");
+                    return false;
+                });
+            }
+        });
+    }
+
+    confirmTransfer(uid : string[]) {
+        var success : boolean = true;
+        for (var i = 0; i < uid.length; i++) {
+            if (!this.confirmMicroWalletTransfer(uid[i])) {
+                success = false;
+            }
+        }
+        return success;
+    }
+
+    revertTransfer(uid : string[]) {
+        var success : boolean = true;
+        for (var i = 0; i < uid.length; i++) {
+            if (!this.revertMicroWalletTransfer(uid[i])) {
+                success = false;
+            }
+        }
+        return success;
     }
 
     splitPrivateKey(pkToSplit : string) {

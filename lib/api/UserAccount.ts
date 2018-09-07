@@ -10,6 +10,28 @@ class UserAccount {
         return codeString;
     }
 
+    signMessage(iPrivateKey : string, iMessage : string) {
+        var bitcoin = require('bitcoinjs-lib'); // v3.3.2
+        var bitcoinMessage = require('bitcoinjs-message');
+
+        var keyPair : any = bitcoin.ECPair.fromWIF(iPrivateKey);
+        var privateKey : any = keyPair.d.toBuffer(32);
+        var message : string = iMessage;
+        
+        var signature = bitcoinMessage.sign(message, privateKey, keyPair.compressed);
+        return signature.toString('base64');
+    }
+
+    verifyMessage(iAddress : string, iSignature : string, iMessage : string) {
+        var bitcoinMessage = require('bitcoinjs-message');
+
+        var address = iAddress;
+        var signature = iSignature;
+        var message = iMessage;
+        
+        console.log(bitcoinMessage.verify(message, address, signature))
+    }
+
     createAccount(iUsername : string, iUid : string, iPublicKey : string) {
         var UserAccountObject : any = mongoose.model('UserAccountObject', UserAccountSchema);
 

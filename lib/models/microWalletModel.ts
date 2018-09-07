@@ -7,6 +7,9 @@ export const MicroWalletSchema = new Schema({
         type: String,
         required: 'Requires recordType'
     },
+    previousOwner: {
+        type: String
+    },
     owner: {
         type: String,
         required: 'Requires username'

@@ -17,6 +17,22 @@ class UserAccount {
         var codeString = code.toString();
         return codeString;
     }
+    signMessage(iPrivateKey, iMessage) {
+        var bitcoin = require('bitcoinjs-lib'); // v3.3.2
+        var bitcoinMessage = require('bitcoinjs-message');
+        var keyPair = bitcoin.ECPair.fromWIF(iPrivateKey);
+        var privateKey = keyPair.d.toBuffer(32);
+        var message = iMessage;
+        var signature = bitcoinMessage.sign(message, privateKey, keyPair.compressed);
+        return signature.toString('base64');
+    }
+    verifyMessage(iAddress, iSignature, iMessage) {
+        var bitcoinMessage = require('bitcoinjs-message');
+        var address = iAddress;
+        var signature = iSignature;
+        var message = iMessage;
+        console.log(bitcoinMessage.verify(message, address, signature));
+    }
     createAccount(iUsername, iUid, iPublicKey) {
         var UserAccountObject = mongoose.model('UserAccountObject', userAccountModel_1.UserAccountSchema);
         return this.checkUsername(iUsername).then(isFound => {

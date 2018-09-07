@@ -126,7 +126,6 @@ export class DarkRoutes {
             var darkWallet : DarkWallet = new DarkWallet();
             var breakEstimate : number = darkWallet.estimateBreaks(inputAmount);
             var lSuccess : boolean = true;
-            var coinPrefix : string;
             var network : number;
 
             if (breakEstimate <= 0) {
@@ -138,10 +137,8 @@ export class DarkRoutes {
                 if (coin.charAt(0) === "t") {
                     network = 2;
                     coin = coin.substring(1, coin.length)
-                    coinPrefix = "t";
                 } else {
                     network = 1;
-                    coinPrefix = "";
                 }
                 switch(coin) {
                     case 'BTC': creatorApi = new BitcoinAPI; break;
@@ -162,15 +159,36 @@ export class DarkRoutes {
         });
 
         app.post('/dark/send/', (req: Request, res: Response) => {
-            res.send(JSON.stringify({success: false}));
+            var darkWallet : DarkWallet = new DarkWallet();
+            var currentOwner : string = req.body.owner;
+            var newOwner : string = req.body.newOwner;
+            var uid : string[] = req.body.uid;
+            var success : boolean;
+
+            for (var i = 0; i < uid.length; i++) {
+                if (!darkWallet.transferOwnershipOfMicroWallet(currentOwner, newOwner, uid[i])) {
+                    success = darkWallet.revertTransfer(uid);
+                    res.send(JSON.stringify({success: false, revert: success}));
+                    return;
+                }
+            }
+
+            success = darkWallet.confirmTransfer(uid);
+            res.send(JSON.stringify({success: true, confirmed: success}));
         });
 
         app.post('/dark/checkOwnership/', (req: Request, res: Response) => {
-            res.send(JSON.stringify({success: false}));
-        });
+            var darkWallet : DarkWallet = new DarkWallet();
+            var owner : string = req.body.owner;
+            var uid : string[] = req.body.uid;
 
-        app.post('/dark/claimWallets/', (req: Request, res: Response) => {
-            res.send(JSON.stringify({success: false}));
+            for (var i = 0; i < uid.length; i++) {
+                if (!darkWallet.confirmOwnershipOfMicroWallet(owner, uid[i])) {
+                    res.send(JSON.stringify({success: true, confirmation: false}));
+                    return;
+                }
+            }
+            res.send(JSON.stringify({success: true, confirmation: true}));
         });
     }
 }

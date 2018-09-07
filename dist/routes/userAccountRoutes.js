@@ -60,8 +60,28 @@ class UserAccountRoutes {
             ;
         });
         app.post('/userAccount/signMessage/', (req, res) => {
-            // TODO...
-            res.send(JSON.stringify({ success: false, signature: "" }));
+            var userAccount = new UserAccount_1.UserAccount;
+            try {
+                var sig = userAccount.signMessage(req.body.privateKey, req.body.message);
+                res.send(JSON.stringify({ success: true, signature: sig }));
+            }
+            catch (_a) {
+                res.send(JSON.stringify({ success: false, signature: "" }));
+            }
+        });
+        app.post('/userAccount/verifyMessage/', (req, res) => {
+            var bitcoinMessage = require('bitcoinjs-message');
+            var address = req.body.address;
+            var signature = req.body.signature;
+            var message = req.body.message;
+            var success;
+            try {
+                success = bitcoinMessage.verify(message, address, signature);
+                res.send(JSON.stringify({ success: true, confirmed: success }));
+            }
+            catch (_a) {
+                res.send(JSON.stringify({ success: false, signature: "" }));
+            }
         });
         app.post('/userAccount/mnemonicSeed/', (req, res) => {
             let userAccountApi = new UserAccount_1.UserAccount;
