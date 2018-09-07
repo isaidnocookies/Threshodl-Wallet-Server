@@ -1,6 +1,8 @@
 import * as mongoose from 'mongoose';
 import { MicroWalletSchema } from '../models/microWalletModel';
 
+import { StringMath } from '../api/StringMath';
+
 class DarkWallet {
 
     coin : string = "";
@@ -13,6 +15,7 @@ class DarkWallet {
     }
 
     getBreakValues(totalToBreak : string) {
+        var stringMath : StringMath = new StringMath();
         var finalValues : string[] = [];
         var valuesToBreak : string[] = [];
 
@@ -25,24 +28,19 @@ class DarkWallet {
         }
 
         while (valuesToBreak.length > 0) {
+            console.log(valuesToBreak);
             var valueToBreak : string = valuesToBreak.pop();
             var splitValue : any = this.splitValues(valueToBreak);
 
             if (splitValue.valid) {
                 finalValues.push(splitValue.int);
 
-                var splitValueRem : any = this.getValueAndMagnitude(splitValue.remainder);
-
                 if (valuesToBreak.length !== 0) {
-                    var topValueToBreak : any = this.getValueAndMagnitude(valuesToBreak[valuesToBreak.length - 1]);
                     var pushToFinal : boolean = false;
-    
-                    //check if value is higher than top element on toBreak
-                    if (splitValueRem.magnitude === topValueToBreak.magnitude) {
-                        if (splitValueRem.value <= topValueToBreak.value) {
-                            pushToFinal = true;
-                        }
-                    } else if (splitValueRem.magnitude < topValueToBreak.magnitude) {
+                    
+                    if (stringMath.isLessThanOrEqualTo(splitValue.remainder, valuesToBreak[valuesToBreak.length - 1])) {
+                        pushToFinal = true;
+                    } else if (stringMath.isEqual(splitValue.remainder, this.minBreak)) {
                         pushToFinal = true;
                     }
                 } else {
@@ -70,6 +68,10 @@ class DarkWallet {
         if (digitValue === 1) {
             digitValue = 10;
             valueMagnitude -= 1;
+
+            if (valueMagnitude === 0) {
+                valueMagnitude--;
+            }
         }
 
         if (valueMagnitude < this.minMagnitude) {
@@ -258,8 +260,27 @@ class DarkWallet {
         });
     }
 
-    transferOwnershipOfMicroWallet(currentOwner : string, newOwner : string, uid : string) {
+    async transferOwnershipOfMicroWallet(currentOwner : string, newOwner : string, uid : string) {
         var MicroWalletObject : any = mongoose.model('MicroWalletObject', MicroWalletSchema);
+        return await MicroWalletObject.find({uniqueId : uid}).then((query, err) => {
+            if (query === null) {
+                console.log("Transfer failed. UID not found..  Error: " + err)
+                return false;
+            } else {
+                if (query[0].owner === currentOwner) {
+                    query[0].owner = newOwner;
+                    return query[0].save().then(() => {
+                        return true;
+                    }).catch(() => {
+                        console.log("caught by transfer....");
+                        return false;
+                    });
+                } else {
+                    console.log("Invalid owner... Do not have access to this wallet");
+                    return false;
+                }
+            }
+        });
     }
 
     splitPrivateKey(pkToSplit : string) {

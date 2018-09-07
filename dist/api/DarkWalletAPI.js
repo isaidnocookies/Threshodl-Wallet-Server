@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose = require("mongoose");
 const microWalletModel_1 = require("../models/microWalletModel");
+const StringMath_1 = require("../api/StringMath");
 class DarkWallet {
     constructor() {
         this.coin = "";
@@ -21,6 +22,7 @@ class DarkWallet {
         return (Math.floor(1.74448 * Math.log(18211.5 * lTotal)));
     }
     getBreakValues(totalToBreak) {
+        var stringMath = new StringMath_1.StringMath();
         var finalValues = [];
         var valuesToBreak = [];
         //break totalToBreak down into 'single non-zero digit' numbers
@@ -31,21 +33,17 @@ class DarkWallet {
             }
         }
         while (valuesToBreak.length > 0) {
+            console.log(valuesToBreak);
             var valueToBreak = valuesToBreak.pop();
             var splitValue = this.splitValues(valueToBreak);
             if (splitValue.valid) {
                 finalValues.push(splitValue.int);
-                var splitValueRem = this.getValueAndMagnitude(splitValue.remainder);
                 if (valuesToBreak.length !== 0) {
-                    var topValueToBreak = this.getValueAndMagnitude(valuesToBreak[valuesToBreak.length - 1]);
                     var pushToFinal = false;
-                    //check if value is higher than top element on toBreak
-                    if (splitValueRem.magnitude === topValueToBreak.magnitude) {
-                        if (splitValueRem.value <= topValueToBreak.value) {
-                            pushToFinal = true;
-                        }
+                    if (stringMath.isLessThanOrEqualTo(splitValue.remainder, valuesToBreak[valuesToBreak.length - 1])) {
+                        pushToFinal = true;
                     }
-                    else if (splitValueRem.magnitude < topValueToBreak.magnitude) {
+                    else if (stringMath.isEqual(splitValue.remainder, this.minBreak)) {
                         pushToFinal = true;
                     }
                 }
@@ -72,6 +70,9 @@ class DarkWallet {
         if (digitValue === 1) {
             digitValue = 10;
             valueMagnitude -= 1;
+            if (valueMagnitude === 0) {
+                valueMagnitude--;
+            }
         }
         if (valueMagnitude < this.minMagnitude) {
             return { int: "", remainder: "", valid: false };
@@ -209,7 +210,7 @@ class DarkWallet {
         var MicroWalletObject = mongoose.model('MicroWalletObject', microWalletModel_1.MicroWalletSchema);
         return MicroWalletObject.find({ uniqueId: uid }).then(docs => {
             if (docs.length) {
-                return { success: false, uid: docs[0].uniqueId, owner: docs[0].owner, privateKey: docs[0].privateKey, secretKey: docs[0].secretKey, created: docs[0].created_date };
+                return { success: true, uid: docs[0].uniqueId, owner: docs[0].owner, privateKey: docs[0].privateKey, secretKey: docs[0].secretKey, created: docs[0].created_date };
             }
             else {
                 throw new Error("UID not found");
@@ -231,9 +232,45 @@ class DarkWallet {
     }
     confirmOwnershipOfMicroWallet(owner, uid) {
         var MicroWalletObject = mongoose.model('MicroWalletObject', microWalletModel_1.MicroWalletSchema);
+        return MicroWalletObject.find({ uniqueId: uid }).then(docs => {
+            if (docs.length) {
+                if (docs[0].owner === owner) {
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
+            else {
+                throw new Error("UID not found");
+            }
+        });
     }
     transferOwnershipOfMicroWallet(currentOwner, newOwner, uid) {
-        var MicroWalletObject = mongoose.model('MicroWalletObject', microWalletModel_1.MicroWalletSchema);
+        return __awaiter(this, void 0, void 0, function* () {
+            var MicroWalletObject = mongoose.model('MicroWalletObject', microWalletModel_1.MicroWalletSchema);
+            return yield MicroWalletObject.find({ uniqueId: uid }).then((query, err) => {
+                if (query === null) {
+                    console.log("Transfer failed. UID not found..  Error: " + err);
+                    return false;
+                }
+                else {
+                    if (query[0].owner === currentOwner) {
+                        query[0].owner = newOwner;
+                        return query[0].save().then(() => {
+                            return true;
+                        }).catch(() => {
+                            console.log("caught by transfer....");
+                            return false;
+                        });
+                    }
+                    else {
+                        console.log("Invalid owner... Do not have access to this wallet");
+                        return false;
+                    }
+                }
+            });
+        });
     }
     splitPrivateKey(pkToSplit) {
         var userPk = "";

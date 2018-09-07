@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 
 import { DarkWallet } from '../api/DarkWalletAPI';
+import { StringMath } from '../api/StringMath';
 import { CryptoAPI } from "../api/CryptoAPI";
 
 import { BitcoinAPI } from "../api/BitcoinAPI";
@@ -16,23 +17,26 @@ export class DarkRoutes {
         })
 
         app.post('/dark/', (req: Request, res: Response) => {
-            var darkWallet : DarkWallet = new DarkWallet();
-            var uid : string = req.body.uid;
-            
-            res.status(200).send({message: "Testing...."});
+            res.status(200).send({message: "Testing..."});
         });
 
         app.post('/dark/createWallets/', (req: Request, res: Response) => {
             var darkWallet : DarkWallet = new DarkWallet();
+            var stringMath : StringMath = new StringMath();
             var coin : string = req.body.coin;
             var amount : string = req.body.value;
             var owner : string = req.body.owner;
+            var saveToDB : boolean = req.body.save;
             var coinPrefix : string;
             var network : number;
             var amountMinusFee : string;
             var breakEstimation : number = darkWallet.estimateBreaks(amount);
             var walletValues : string[];
             var walletReturn : any = new Object();
+
+            if (saveToDB === null) {
+                saveToDB = true;
+            }
 
             let api : CryptoAPI;
 
@@ -56,8 +60,9 @@ export class DarkRoutes {
                     return;
             }
 
-            api.getTransactionFee(network, 1, breakEstimation).then(fee => {
-                amountMinusFee = (parseFloat(amount) - parseFloat(fee)).toString();
+            api.getTransactionFee(network, 1, breakEstimation).then(ifee => {
+                var fee : string = stringMath.roundUpToNearest0001(ifee);
+                amountMinusFee = stringMath.subtract(amount, fee);
                 walletValues = darkWallet.getBreakValues(amountMinusFee);
     
                 for (var i = 0; i < walletValues.length; i++) {
@@ -81,10 +86,12 @@ export class DarkRoutes {
                     creatorApi = null;
 
                     // save wallets to db...
-                    darkWallet.saveMicroWallet(owner, wallet.address, splitKeys.server, splitKeys.user);
+                    if (saveToDB) {
+                        darkWallet.saveMicroWallet(owner, wallet.address, splitKeys.server, splitKeys.user);
+                    }
                 }
 
-                res.status(200).send({success: true, coin: (coinPrefix + coin), wallets: walletReturn})
+                res.status(200).send({success: true, fee: fee, coin: (coinPrefix + coin), wallets: walletReturn})
             });
         });
 
@@ -111,6 +118,47 @@ export class DarkRoutes {
             }
 
             res.send(JSON.stringify({success: lSuccess, estimate: breakEstimate}));
+        });
+
+        app.post('/dark/estimateBreaksAndFees/', (req: Request, res: Response) => {
+            var inputAmount : string = req.body.amount;
+            var coin : string = req.body.coin;
+            var darkWallet : DarkWallet = new DarkWallet();
+            var breakEstimate : number = darkWallet.estimateBreaks(inputAmount);
+            var lSuccess : boolean = true;
+            var coinPrefix : string;
+            var network : number;
+
+            if (breakEstimate <= 0) {
+                lSuccess = false;
+            }
+
+            if (coin !== null) {
+                let creatorApi : CryptoAPI;
+                if (coin.charAt(0) === "t") {
+                    network = 2;
+                    coin = coin.substring(1, coin.length)
+                    coinPrefix = "t";
+                } else {
+                    network = 1;
+                    coinPrefix = "";
+                }
+                switch(coin) {
+                    case 'BTC': creatorApi = new BitcoinAPI; break;
+                    case 'LTC': creatorApi = new LitecoinAPI; break;
+                    case 'DASH': creatorApi = new DashAPI; break;
+                    case 'ZEC': creatorApi = new ZCashAPI; break;
+                    case 'DOGE': creatorApi = new DogecoinAPI; break;
+                    default:
+                    res.send(JSON.stringify({success: lSuccess, estimate: breakEstimate, feeEstimate: "-1"}));
+                        return;
+                }
+                creatorApi.getTransactionFee(network, 2, breakEstimate).then(ifee => {
+                    res.send(JSON.stringify({success: lSuccess, estimate: breakEstimate, feeEstimate: ifee}));
+                });
+            } else {
+                res.send(JSON.stringify({success: lSuccess, estimate: breakEstimate, feeEstimate: "-1"}));
+            }
         });
 
         app.post('/dark/send/', (req: Request, res: Response) => {

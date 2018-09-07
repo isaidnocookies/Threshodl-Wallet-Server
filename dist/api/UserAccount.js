@@ -1,4 +1,12 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose = require("mongoose");
 const userAccountModel_1 = require("../models/userAccountModel");
@@ -66,10 +74,30 @@ class UserAccount {
         });
     }
     validateUsername(iUsername) {
-        throw new Error("Method not implemented.");
+        if (iUsername.length < 32) {
+            return true;
+        }
+        return false;
     }
-    changeUsername(publicKey, newUsername) {
-        throw new Error("Method not implemented.");
+    changeUsername(iPublicKey, newUsername) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var UserAccountObject = mongoose.model('MicroWalletObject', userAccountModel_1.UserAccountSchema);
+            return yield UserAccountObject.find({ publickey: iPublicKey }).then((query, err) => {
+                if (query === null) {
+                    console.log("Transfer failed. Public Key not found..  Error: " + err);
+                    return false;
+                }
+                else {
+                    query[0].username = newUsername;
+                    return query[0].save().then(() => {
+                        return true;
+                    }).catch(() => {
+                        console.log("caught by change username....");
+                        return false;
+                    });
+                }
+            });
+        });
     }
     getUsername(iPublicKey) {
         var UserAccountObject = mongoose.model('UserAccountObject', userAccountModel_1.UserAccountSchema);

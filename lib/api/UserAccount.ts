@@ -73,11 +73,28 @@ class UserAccount {
     }
 
     validateUsername(iUsername : string) {
-        throw new Error("Method not implemented.");
+        if (iUsername.length < 32) {
+            return true;
+        }
+        return false;
     }
 
-    changeUsername(publicKey : string, newUsername : string) {
-        throw new Error("Method not implemented.");
+    async changeUsername(iPublicKey : string, newUsername : string) {
+        var UserAccountObject : any = mongoose.model('MicroWalletObject', UserAccountSchema);
+        return await UserAccountObject.find({publickey : iPublicKey}).then((query, err) => {
+            if (query === null) {
+                console.log("Transfer failed. Public Key not found..  Error: " + err)
+                return false;
+            } else {
+                query[0].username = newUsername;
+                return query[0].save().then(() => {
+                    return true;
+                }).catch(() => {
+                    console.log("caught by change username....");
+                    return false;
+                });
+            }
+        });
     }
 
     getUsername(iPublicKey : string) {
