@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 
 import { DarkWallet } from '../api/DarkWalletAPI';
+import { UserAccount } from '../api/UserAccount';
 import { StringMath } from '../api/StringMath';
 import { CryptoAPI } from "../api/CryptoAPI";
 
@@ -25,7 +26,7 @@ export class DarkRoutes {
             var stringMath : StringMath = new StringMath();
             var coin : string = req.body.coin;
             var amount : string = req.body.value;
-            var owner : string = req.body.owner;
+            var ownerId : string = req.body.ownerId;
             var saveToDB : boolean = req.body.save;
             var coinPrefix : string;
             var network : number;
@@ -87,7 +88,7 @@ export class DarkRoutes {
 
                     // save wallets to db...
                     if (saveToDB) {
-                        darkWallet.saveMicroWallet(owner, wallet.address, splitKeys.server, splitKeys.user);
+                        darkWallet.saveMicroWallet(ownerId, wallet.address, splitKeys.server, splitKeys.user);
                     }
                 }
 
@@ -160,21 +161,41 @@ export class DarkRoutes {
 
         app.post('/dark/send/', (req: Request, res: Response) => {
             var darkWallet : DarkWallet = new DarkWallet();
-            var currentOwner : string = req.body.owner;
-            var newOwner : string = req.body.newOwner;
+            var userAccount : UserAccount = new UserAccount();
+            var currentOwner : string = req.body.ownerId;
+            var newOwner : string = req.body.newOwnerUsername;
             var uid : string[] = req.body.uid;
             var success : boolean;
 
-            for (var i = 0; i < uid.length; i++) {
-                if (!darkWallet.transferOwnershipOfMicroWallet(currentOwner, newOwner, uid[i])) {
-                    success = darkWallet.revertTransfer(uid);
-                    res.send(JSON.stringify({success: false, revert: success}));
-                    return;
-                }
-            }
+            var authMessage : string = req.body.message;
+            var password : string = req.body.password;
 
-            success = darkWallet.confirmTransfer(uid);
-            res.send(JSON.stringify({success: true, confirmed: success}));
+            userAccount.authenticateRequest(currentOwner, authMessage, password).then(confirmed => {
+                if (confirmed) {
+                    for (var i = 0; i < uid.length; i++) {
+                        try{
+                            if (!darkWallet.transferOwnershipOfMicroWallet(currentOwner, newOwner, uid[i])) {
+                                console.log("Failed to complete transfer...");
+                                success = darkWallet.revertTransfer(uid);
+                                res.send(JSON.stringify({success: false, revert: success}));
+                                return;
+                            }
+                        } catch {
+                            console.log("Error thrown while in complete transfer...");
+                            success = darkWallet.revertTransfer(uid);
+                            res.send(JSON.stringify({success: false, revert: success}));
+                            return;
+                        }
+                    }
+                    console.log("Successfully transferred ownership");
+                    success = darkWallet.confirmTransfer(uid);
+                    res.send(JSON.stringify({success: true, confirmed: success}));
+                } else {
+                    res.send(JSON.stringify({success: false, message: "Failed to authenticate"}));
+                }
+            }).catch(() => {
+                res.send(JSON.stringify({success: false, message: "Failed to authenticate"}));
+            });
         });
 
         app.post('/dark/checkOwnership/', (req: Request, res: Response) => {

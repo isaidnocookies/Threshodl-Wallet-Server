@@ -7,6 +7,12 @@ class UserAccountRoutes {
             var userAccount = new UserAccount_1.UserAccount;
             res.status(200).send({ message: "User account says, hello world!" });
         });
+        app.post('/userAccount/', (req, res) => {
+            var userAccount = new UserAccount_1.UserAccount;
+            userAccount.authenticateRequest(req.body.username, req.body.message, req.body.password).then(passed => {
+                res.status(200).send({ success: passed, message: "Testing auth function..." });
+            });
+        });
         app.post('/userAccount/create/', (req, res) => {
             var userAccount = new UserAccount_1.UserAccount;
             var lUsername = req.body.username;
@@ -80,7 +86,7 @@ class UserAccountRoutes {
                 res.send(JSON.stringify({ success: true, confirmed: success }));
             }
             catch (_a) {
-                res.send(JSON.stringify({ success: false, signature: "" }));
+                res.send(JSON.stringify({ success: false, confirmed: false }));
             }
         });
         app.post('/userAccount/mnemonicSeed/', (req, res) => {

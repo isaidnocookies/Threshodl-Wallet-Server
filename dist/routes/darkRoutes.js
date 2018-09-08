@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const DarkWalletAPI_1 = require("../api/DarkWalletAPI");
+const UserAccount_1 = require("../api/UserAccount");
 const StringMath_1 = require("../api/StringMath");
 const BitcoinAPI_1 = require("../api/BitcoinAPI");
 const ZCashAPI_1 = require("../api/ZCashAPI");
@@ -20,7 +21,7 @@ class DarkRoutes {
             var stringMath = new StringMath_1.StringMath();
             var coin = req.body.coin;
             var amount = req.body.value;
-            var owner = req.body.owner;
+            var ownerId = req.body.ownerId;
             var saveToDB = req.body.save;
             var coinPrefix;
             var network;
@@ -93,7 +94,7 @@ class DarkRoutes {
                     creatorApi = null;
                     // save wallets to db...
                     if (saveToDB) {
-                        darkWallet.saveMicroWallet(owner, wallet.address, splitKeys.server, splitKeys.user);
+                        darkWallet.saveMicroWallet(ownerId, wallet.address, splitKeys.server, splitKeys.user);
                     }
                 }
                 res.status(200).send({ success: true, fee: fee, coin: (coinPrefix + coin), wallets: walletReturn });
@@ -123,7 +124,6 @@ class DarkRoutes {
             var darkWallet = new DarkWalletAPI_1.DarkWallet();
             var breakEstimate = darkWallet.estimateBreaks(inputAmount);
             var lSuccess = true;
-            var coinPrefix;
             var network;
             if (breakEstimate <= 0) {
                 lSuccess = false;
@@ -133,11 +133,9 @@ class DarkRoutes {
                 if (coin.charAt(0) === "t") {
                     network = 2;
                     coin = coin.substring(1, coin.length);
-                    coinPrefix = "t";
                 }
                 else {
                     network = 1;
-                    coinPrefix = "";
                 }
                 switch (coin) {
                     case 'BTC':
@@ -168,13 +166,54 @@ class DarkRoutes {
             }
         });
         app.post('/dark/send/', (req, res) => {
-            res.send(JSON.stringify({ success: false }));
+            var darkWallet = new DarkWalletAPI_1.DarkWallet();
+            var userAccount = new UserAccount_1.UserAccount();
+            var currentOwner = req.body.ownerId;
+            var newOwner = req.body.newOwnerUsername;
+            var uid = req.body.uid;
+            var success;
+            var authMessage = req.body.message;
+            var password = req.body.password;
+            userAccount.authenticateRequest(currentOwner, authMessage, password).then(confirmed => {
+                if (confirmed) {
+                    for (var i = 0; i < uid.length; i++) {
+                        try {
+                            if (!darkWallet.transferOwnershipOfMicroWallet(currentOwner, newOwner, uid[i])) {
+                                console.log("Failed to complete transfer...");
+                                success = darkWallet.revertTransfer(uid);
+                                res.send(JSON.stringify({ success: false, revert: success }));
+                                return;
+                            }
+                        }
+                        catch (_a) {
+                            console.log("Error thrown while in complete transfer...");
+                            success = darkWallet.revertTransfer(uid);
+                            res.send(JSON.stringify({ success: false, revert: success }));
+                            return;
+                        }
+                    }
+                    console.log("Successfully transferred ownership");
+                    success = darkWallet.confirmTransfer(uid);
+                    res.send(JSON.stringify({ success: true, confirmed: success }));
+                }
+                else {
+                    res.send(JSON.stringify({ success: false, message: "Failed to authenticate" }));
+                }
+            }).catch(() => {
+                res.send(JSON.stringify({ success: false, message: "Failed to authenticate" }));
+            });
         });
         app.post('/dark/checkOwnership/', (req, res) => {
-            res.send(JSON.stringify({ success: false }));
-        });
-        app.post('/dark/claimWallets/', (req, res) => {
-            res.send(JSON.stringify({ success: false }));
+            var darkWallet = new DarkWalletAPI_1.DarkWallet();
+            var owner = req.body.owner;
+            var uid = req.body.uid;
+            for (var i = 0; i < uid.length; i++) {
+                if (!darkWallet.confirmOwnershipOfMicroWallet(owner, uid[i])) {
+                    res.send(JSON.stringify({ success: true, confirmation: false }));
+                    return;
+                }
+            }
+            res.send(JSON.stringify({ success: true, confirmation: true }));
         });
     }
 }

@@ -3,6 +3,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 class Config {
     constructor() {
         this.localEnvironment = true;
+        this.authentication = {
+            password: "threshodlpassword"
+        };
         this.db = {
             production: {
                 url: "mongodb+srv://thdlDev:pass123!@thdldev-pdprj.mongodb.net/thdlDev?retryWrites=true"

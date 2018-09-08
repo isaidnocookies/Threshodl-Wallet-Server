@@ -8,6 +8,13 @@ export class UserAccountRoutes {
             res.status(200).send({message: "User account says, hello world!"})
         })
 
+        app.post('/userAccount/', (req: Request, res: Response) => {
+            var userAccount : any = new UserAccount;
+            userAccount.authenticateRequest(req.body.username, req.body.message, req.body.password).then(passed => {
+                res.status(200).send({success: passed, message: "Testing auth function..."})
+            });
+        })
+
         app.post('/userAccount/create/', (req: Request, res: Response) => {
             var userAccount : any = new UserAccount;
             var lUsername : string = req.body.username;

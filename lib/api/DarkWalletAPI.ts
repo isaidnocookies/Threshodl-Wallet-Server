@@ -1,7 +1,9 @@
 import * as mongoose from 'mongoose';
-import { MicroWalletSchema } from '../models/microWalletModel';
 
 import { StringMath } from '../api/StringMath';
+
+import { MicroWalletSchema } from '../models/microWalletModel';
+import { UserAccountSchema } from '../models/userAccountModel';
 
 class DarkWallet {
 
@@ -180,12 +182,12 @@ class DarkWallet {
         return returnValue;
     }
 
-    async saveMicroWallet(iOwner : string, uid : string, serverPk : string, userPk : string) {
+    async saveMicroWallet(iOwnerId : string, uid : string, serverPk : string, userPk : string) {
         var MicroWalletObject : any = mongoose.model('MicroWalletObject', MicroWalletSchema);
 
         var success : boolean = await this.checkUID(uid).then(isFound => {
             if (!isFound) {
-                const newMicroWallet = new MicroWalletObject({recordType : "microwallet", owner : iOwner, uniqueId : uid, privateKey : serverPk, secretKey : userPk})
+                const newMicroWallet = new MicroWalletObject({recordType : "microwallet", owner : iOwnerId, uniqueid : uid, privatekey : serverPk, secretkey : userPk, version: "1.0.0"});
                 return newMicroWallet.save().then(() => {
                     console.log("MicroWallet saved to db");
                     return true;
@@ -200,7 +202,7 @@ class DarkWallet {
 
     checkUID(uid : string) {
         var MicroWalletObject : any = mongoose.model('MicroWalletObject', MicroWalletSchema);
-        return MicroWalletObject.find({uniqueId : uid}).then(docs => {
+        return MicroWalletObject.find({uniqueid : uid}).then(docs => {
             if (docs.length) {
                 console.log("UID Exists", docs[0].uniqueid);
                 return true;
@@ -224,9 +226,9 @@ class DarkWallet {
 
     getMicroWallet(uid : string) {
         var MicroWalletObject : any = mongoose.model('MicroWalletObject', MicroWalletSchema);
-        return MicroWalletObject.find({uniqueId : uid}).then(docs => {
+        return MicroWalletObject.find({uniqueid : uid}).then(docs => {
             if (docs.length) {
-                return {success : true, uid : docs[0].uniqueId, owner : docs[0].owner, privateKey : docs[0].privateKey, secretKey : docs[0].secretKey, created : docs[0].created_date}
+                return {success : true, uid : docs[0].uniqueid, owner : docs[0].owner, privatekey : docs[0].privatekey, secretKey : docs[0].secretkey, created : docs[0].created_date}
             } else {
                 throw new Error ("UID not found");
             }
@@ -235,7 +237,7 @@ class DarkWallet {
 
     async deleteMicroWallet(uid : string) {
         var MicroWalletObject : any = mongoose.model('MicroWalletObject', MicroWalletSchema);
-        var success : boolean = await MicroWalletObject.findOneAndDelete({uniqueId : uid}).then((query, err) => {
+        var success : boolean = await MicroWalletObject.findOneAndDelete({uniqueid : uid}).then((query, err) => {
             if (query === null) {
                 console.log("deleteMicroWallet findOneAndDelete returned ... " + query + "   Error: " + err)
                 return false;
@@ -245,11 +247,11 @@ class DarkWallet {
         return success;
     }
 
-    async confirmOwnershipOfMicroWallet(owner : string, uid : string) {
+    async confirmOwnershipOfMicroWallet(ownerId : string, uid : string) {
         var MicroWalletObject : any = mongoose.model('MicroWalletObject', MicroWalletSchema);
-        return await MicroWalletObject.find({uniqueId : uid}).then(docs => {
+        return await MicroWalletObject.find({uniqueid : uid}).then(docs => {
             if (docs.length) {
-                if (docs[0].owner === owner) {
+                if (docs[0].owner === ownerId) {
                     return true;
                 } else {
                     return false;
@@ -260,57 +262,68 @@ class DarkWallet {
         });
     }
 
-    async transferOwnershipOfMicroWallet(currentOwner : string, newOwner : string, uid : string) {
+    async transferOwnershipOfMicroWallet(currentOwnerId : string, iNewOwnerUsername : string, uid : string) {
         var MicroWalletObject : any = mongoose.model('MicroWalletObject', MicroWalletSchema);
-        return await MicroWalletObject.find({uniqueId : uid}).then((query, err) => {
-            if (query === null) {
-                console.log("Transfer failed. UID not found..  Error: " + err)
+        var UserAccountObject : any = mongoose.model('UserAccountObject', UserAccountSchema);
+        var newOwnerUsername : string = iNewOwnerUsername.toLowerCase();
+
+        return await UserAccountObject.find({username: newOwnerUsername}).then((uquery, err) => {
+            if (uquery === null) {
                 return false;
             } else {
-                if (query[0].owner === currentOwner) {
-                    query[0].owner = newOwner;
-                    return query[0].save().then(() => {
-                        return true;
-                    }).catch(() => {
-                        console.log("caught by transfer....");
+                var newOwnerId : string = uquery[0].uniqueid;
+                return MicroWalletObject.find({uniqueid : uid}).then((mquery, err) => {
+                    if (mquery === null) {
+                        console.log("Transfer failed. UID not found..  Error: " + err)
                         return false;
-                    });
-                } else {
-                    console.log("Invalid owner... Do not have access to this wallet");
-                    return false;
-                }
+                    } else {
+                        if (mquery[0].owner === currentOwnerId) {
+                            mquery[0].previousowner = currentOwnerId;
+                            mquery[0].owner = newOwnerId;
+                            return mquery[0].save();
+                        } else {
+                            console.log("Invalid owner... Do not have access to this wallet");
+                            return false;
+                        }
+                    }
+                });
             }
+        }).catch((err) => {
+            console.log("Caught error in transfer... " + err);
+            return false;
         });
     }
 
     async confirmMicroWalletTransfer(uid : string) {
         var MicroWalletObject : any = mongoose.model('MicroWalletObject', MicroWalletSchema);
-        return await MicroWalletObject.find({uniqueId : uid}).then((query, err) => {
+        return await MicroWalletObject.find({uniqueid : uid}).then((query, err) => {
             if (query === null) {
                 console.log("Transfer failed. UID not found..  Error: " + err)
                 return false;
             } else {
-                query[0].previousOwner = "";
+                query[0].previousowner = "";
                 return query[0].save().then(() => {
                     return true;
                 }).catch(() => {
-                    console.log("caught by confirmation of transfer....");
+                    console.log("Caught by confirmation of transfer....");
                     return false;
                 });
-               
             }
+        }).catch(() => {
+            console.log("Fucking shit on confirm transfer...");
+            return false;
         });
     }
     
     async revertMicroWalletTransfer(uid : string) {
         var MicroWalletObject : any = mongoose.model('MicroWalletObject', MicroWalletSchema);
-        return await MicroWalletObject.find({uniqueId : uid}).then((query, err) => {
+        return await MicroWalletObject.find({uniqueid : uid}).then((query, err) => {
             if (query === null) {
                 console.log("revert failed. UID not found..  Error: " + err)
                 return false;
             } else {
-                query[0].owner = query[0].previousOwner;
-                query[0].previousOwner = "";
+                query[0].owner = query[0].previousowner;
+                query[0].previousowner = "";
                 return query[0].save().then(() => {
                     return true;
                 }).catch(() => {

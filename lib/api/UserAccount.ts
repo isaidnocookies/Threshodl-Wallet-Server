@@ -1,6 +1,10 @@
 import * as mongoose from 'mongoose';
 import { UserAccountSchema } from '../models/userAccountModel';
+import { Config } from "../config/config";
+
 class UserAccount {
+
+    config : any = new Config();
 
     createMnemonicWords() {
         let Mnemonic : any = require('bitcore-mnemonic');
@@ -39,7 +43,7 @@ class UserAccount {
             if (isFound) {
                 return false;
             } else {
-                const newUser = new UserAccountObject({recordType: "user", username: iUsername, uniqueid: iUid, publickey: iPublicKey});
+                const newUser = new UserAccountObject({recordType: "user", username: iUsername, uniqueid: iUid, publickey: iPublicKey, version: "1.0.0"});
                 return newUser.save().then(() => {
                     console.log('New user was saved to db')
                     return true;
@@ -126,6 +130,23 @@ class UserAccount {
                 return docs[0].username;
             } else {
                 return "";
+            }
+        });
+    }
+
+    authenticateRequest(userId : string, message : string, password : string) {
+        var UserAccountObject : any = mongoose.model('UserAccountObject', UserAccountSchema);
+        return UserAccountObject.find({uniqueid : userId}).then(docs => {
+            if (docs.length){
+                console.log("Found user for auth");
+                //temporary solution - check if public keys match...
+                if (docs[0].publickey === message && password === this.config.authentication.password) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
             }
         });
     }

@@ -10,7 +10,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose = require("mongoose");
 const userAccountModel_1 = require("../models/userAccountModel");
+const config_1 = require("../config/config");
 class UserAccount {
+    constructor() {
+        this.config = new config_1.Config();
+    }
     createMnemonicWords() {
         let Mnemonic = require('bitcore-mnemonic');
         var code = new Mnemonic(Mnemonic.Words.ENGLISH);
@@ -40,7 +44,7 @@ class UserAccount {
                 return false;
             }
             else {
-                const newUser = new UserAccountObject({ recordType: "user", username: iUsername, uniqueid: iUid, publickey: iPublicKey });
+                const newUser = new UserAccountObject({ recordType: "user", username: iUsername, uniqueid: iUid, publickey: iPublicKey, version: "1.0.0" });
                 return newUser.save().then(() => {
                     console.log('New user was saved to db');
                     return true;
@@ -123,6 +127,24 @@ class UserAccount {
             }
             else {
                 return "";
+            }
+        });
+    }
+    authenticateRequest(userId, message, password) {
+        var UserAccountObject = mongoose.model('UserAccountObject', userAccountModel_1.UserAccountSchema);
+        return UserAccountObject.find({ uniqueid: userId }).then(docs => {
+            if (docs.length) {
+                console.log("Found user for auth");
+                //temporary solution - check if public keys match...
+                if (docs[0].publickey === message && password === this.config.authentication.password) {
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
+            else {
+                return false;
             }
         });
     }

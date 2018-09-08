@@ -3,7 +3,7 @@ import * as mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
 export const UserAccountSchema = new Schema({
-    recordType: {
+    recordtype: {
         type: String,
         required: 'Requires recordType'
     },
@@ -18,6 +18,10 @@ export const UserAccountSchema = new Schema({
     uniqueid: {
         type: String,
         required: 'Requires uniqueid'            
+    },
+    version: {
+        type: String,
+        required: 'Requires version'
     },
     created_date: {
         type: Date,

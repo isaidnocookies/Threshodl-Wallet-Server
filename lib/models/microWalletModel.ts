@@ -3,27 +3,31 @@ import * as mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
 export const MicroWalletSchema = new Schema({
-    recordType: {
+    recordtype: {
         type: String,
         required: 'Requires recordType'
     },
-    previousOwner: {
+    previousowner: {
         type: String
     },
     owner: {
         type: String,
-        required: 'Requires username'
+        required: 'Requires userId'
     },
-    uniqueId: {
+    uniqueid: {
         type: String,
         required: 'Requires public key'         
     },
-    privateKey: {
+    privatekey: {
         type: String,
         required: 'Requires private key'
     },
-    secretKey: {
+    secretkey: {
         type: String
+    },
+    version: {
+        type: String,
+        required: 'Requires version'
     },
     created_date: {
         type: Date,

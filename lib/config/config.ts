@@ -2,6 +2,10 @@ export class Config
 {
     localEnvironment : boolean = true;
 
+    authentication : any = {
+        password: "threshodlpassword"
+    };
+
     db : any = {
         production : {
             url: "mongodb+srv://thdlDev:pass123!@thdldev-pdprj.mongodb.net/thdlDev?retryWrites=true"
@@ -9,7 +13,7 @@ export class Config
         test : {
             url: "mongodb://localhost/Threshodl"
         }
-    }
+    };
 
     nodes : any = {
         bch:{
@@ -48,7 +52,7 @@ export class Config
                 migrateContractAddress: "0xa8ebf36b0a34acf98395bc5163103efc37621052"
             }
         }
-    }
+    };
 
     insightServers = {
         bch:{
@@ -78,13 +82,13 @@ export class Config
             main: "https://dogechain.info/api/v1",
             testnet: "https://chain.so/api/v2",
         }
-    }
+    };
 
     externalapis = {
         taskserver: {
             host: "https://ts.threebx.com/a/exchangerate",
         }
-    }
+    };
 
     confirmations = {
         btc: 2, //Confirmations needed for change from pending to success transaction.
@@ -94,5 +98,5 @@ export class Config
         zec: 2,
         eth: 5,
         doge: 2
-    }
+    };
 }
