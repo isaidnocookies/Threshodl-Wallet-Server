@@ -46,6 +46,12 @@ export class UserAccountRoutes {
             var lPublicKey : string = lPublicKey = keys[1];
             var success : boolean;
 
+            console.log("Recovering Account...");
+
+            // //Testing and avoiding the account recovery for username...
+            // res.send(JSON.stringify({success: true, username: "username", seed: lSeed, publicKey: lPublicKey, privateKey: lPrivateKey}));
+            // return;
+
             userAccount.getUsername(lPublicKey).then(username => {
                 if (username.length <= 0) {
                     success = false; lSeed = ""; keys = ""; lPrivateKey = ""; lPublicKey = "";
