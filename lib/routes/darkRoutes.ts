@@ -135,9 +135,14 @@ export class DarkRoutes {
 
             if (coin !== null) {
                 let creatorApi : CryptoAPI;
+
+                if (coin.charAt(0) === "d") {
+                    coin = coin.substring(1);
+                }
+
                 if (coin.charAt(0) === "t") {
                     network = 2;
-                    coin = coin.substring(1, coin.length)
+                    coin = coin.substring(1);
                 } else {
                     network = 1;
                 }
@@ -148,7 +153,7 @@ export class DarkRoutes {
                     case 'ZEC': creatorApi = new ZCashAPI; break;
                     case 'DOGE': creatorApi = new DogecoinAPI; break;
                     default:
-                    res.send(JSON.stringify({success: lSuccess, estimate: breakEstimate, feeEstimate: "-1"}));
+                    res.send(JSON.stringify({success: false, estimate: breakEstimate, feeEstimate: "-1"}));
                         return;
                 }
                 creatorApi.getTransactionFee(network, 2, breakEstimate).then(ifee => {
