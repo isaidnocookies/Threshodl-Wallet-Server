@@ -89,6 +89,8 @@ export class DarkRoutes {
                     // save wallets to db...
                     if (saveToDB) {
                         darkWallet.saveMicroWallet(ownerId, wallet.address, splitKeys.server, splitKeys.user);
+                    } else {
+                        console.log("Save wallets to db disabled...");
                     }
                 }
 

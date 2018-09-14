@@ -96,6 +96,9 @@ class DarkRoutes {
                     if (saveToDB) {
                         darkWallet.saveMicroWallet(ownerId, wallet.address, splitKeys.server, splitKeys.user);
                     }
+                    else {
+                        console.log("Save wallets to db disabled...");
+                    }
                 }
                 res.status(200).send({ success: true, fee: fee, coin: (coinPrefix + coin), wallets: walletReturn });
             });

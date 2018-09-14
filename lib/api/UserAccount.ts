@@ -41,13 +41,15 @@ class UserAccount {
 
         return this.checkUsername(iUsername).then(isFound => {
             if (isFound) {
+                console.log("User already exists");
                 return false;
             } else {
-                const newUser = new UserAccountObject({recordType: "user", username: iUsername, uniqueid: iUid, publickey: iPublicKey, version: "1.0.0"});
+                const newUser = new UserAccountObject({recordtype: "user", username: iUsername, uniqueid: iUid, publickey: iPublicKey, version: "1.0.0"});
                 return newUser.save().then(() => {
-                    console.log('New user was saved to db')
+                    console.log('New user was saved to db');
                     return true;
                 }).catch(() => {
+                    console.log("failed to save...");
                     return false;
                 });
             }

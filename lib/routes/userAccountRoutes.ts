@@ -24,6 +24,8 @@ export class UserAccountRoutes {
             var lPrivateKey : string = lPrivateKey = keys[0];
             var lPublicKey : string = lPublicKey = keys[1];
 
+            console.log("About to save user to db");
+
             userAccount.createAccount(lUsername, lPublicKey, lPublicKey).then(success => {
                 if (!success) {
                     lUsername = "";
@@ -31,7 +33,7 @@ export class UserAccountRoutes {
                     lPrivateKey = "";
                     lPublicKey = "";
                 }
-                res.send(JSON.stringify({success: success, username: lUsername, seed: lSeed, publicKey: lPublicKey, privateKey: lPrivateKey}));
+                res.send(JSON.stringify({success: success, username: lUsername, seed: lSeed, publickey: lPublicKey, privatekey: lPrivateKey}));
             }).catch((error) => {
                 res.send(JSON.stringify({success: false, message: `${error}`}));
             });

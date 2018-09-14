@@ -212,7 +212,7 @@ class BitcoinAPI extends CryptoAPI {
         // var insightUrl : string;
         var nodeUrl : string;
 
-        if (chainType == 1) {
+        if (chainType === 1) {
             // insightUrl = this.config.insightServers.btc.main;
             nodeUrl = this.config.nodes.btc.main;
         } else {
@@ -235,7 +235,7 @@ class BitcoinAPI extends CryptoAPI {
               return response.data.result;
             } else {
               let message = {
-                message: `Error sending raw transaction: ${this.coin.toUpperCase()} .`,
+                message: `Error sending raw transaction: ${this.coin.toUpperCase()} ---- ${response.data.result.error}.`,
                 data: response,
               };
               throw new Error(`${this.coin} - Error sending raw transaction. Error  ${JSON.stringify(message)}`);
@@ -250,10 +250,10 @@ class BitcoinAPI extends CryptoAPI {
             return this.sendTransactionHex(chainType, txhex).then(txid => {
                 return txid;
             }).catch(error => {
-                throw new Error(`${this.coin} - Error sending raw transaction.`);
+                throw new Error(`${this.coin} - Error sending raw transaction. Error --- ${error}`);
             });
         }).catch(error => {
-            throw new Error(`${this.coin} - Error creating raw transaction.`);
+            throw new Error(`${this.coin} - Error creating raw transaction. Error --- ${error}`);
         });
     }
 }
