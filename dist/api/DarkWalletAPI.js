@@ -170,7 +170,7 @@ class DarkWallet {
             var MicroWalletObject = mongoose.model('MicroWalletObject', microWalletModel_1.MicroWalletSchema);
             var success = yield this.checkUID(uid).then(isFound => {
                 if (!isFound) {
-                    const newMicroWallet = new MicroWalletObject({ recordType: "microwallet", owner: iOwnerId, uniqueid: uid, privatekey: serverPk, secretkey: userPk, version: "1.0.0" });
+                    const newMicroWallet = new MicroWalletObject({ recordtype: "microwallet", owner: iOwnerId, uniqueid: uid, privatekey: serverPk, secretkey: userPk, version: "1.0.0" });
                     return newMicroWallet.save().then(() => {
                         console.log("MicroWallet saved to db");
                         return true;

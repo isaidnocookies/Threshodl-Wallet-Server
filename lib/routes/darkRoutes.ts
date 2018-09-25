@@ -35,7 +35,9 @@ export class DarkRoutes {
             var walletValues : string[];
             var walletReturn : any = new Object();
 
-            if (saveToDB === null) {
+            if (saveToDB !== true) {
+                saveToDB = false;
+            } else {
                 saveToDB = true;
             }
 

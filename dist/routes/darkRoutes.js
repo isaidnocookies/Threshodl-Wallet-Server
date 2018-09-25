@@ -29,7 +29,10 @@ class DarkRoutes {
             var breakEstimation = darkWallet.estimateBreaks(amount);
             var walletValues;
             var walletReturn = new Object();
-            if (saveToDB === null) {
+            if (saveToDB !== true) {
+                saveToDB = false;
+            }
+            else {
                 saveToDB = true;
             }
             let api;
