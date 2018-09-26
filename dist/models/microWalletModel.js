@@ -12,7 +12,7 @@ exports.MicroWalletSchema = new Schema({
     },
     owner: {
         type: String,
-        required: 'Requires userId'
+        required: 'Requires owner'
     },
     uniqueid: {
         type: String,

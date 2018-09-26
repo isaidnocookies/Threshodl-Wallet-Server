@@ -19,6 +19,8 @@ export class UserAccountRoutes {
             var userAccount : any = new UserAccount;
             var lUsername : string = req.body.username;
 
+            console.log("Creating user...");
+
             var lSeed : string = userAccount.createMnemonicWords();
             var keys : any = userAccount.createAccountKeys(lSeed);
             var lPrivateKey : string = lPrivateKey = keys[0];

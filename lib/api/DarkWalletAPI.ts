@@ -184,17 +184,24 @@ class DarkWallet {
 
     async saveMicroWallet(iOwnerId : string, uid : string, serverPk : string, userPk : string) {
         var MicroWalletObject : any = mongoose.model('MicroWalletObject', MicroWalletSchema);
-
+        console.log("Saving wallet for " + iOwnerId);
         var success : boolean = await this.checkUID(uid).then(isFound => {
             if (!isFound) {
-                const newMicroWallet = new MicroWalletObject({recordtype : "microwallet", owner : iOwnerId, uniqueid : uid, privatekey : serverPk, secretkey : userPk, version: "1.0.0"});
-                return newMicroWallet.save().then(() => {
-                    console.log("MicroWallet saved to db");
-                    return true;
-                })
+                try {
+                    const newMicroWallet = new MicroWalletObject({recordtype : "microwallet", owner : iOwnerId, uniqueid : uid, privatekey : serverPk, secretkey : userPk, version: "1.0.0"});
+                    return newMicroWallet.save().then(() => {
+                        console.log("MicroWallet saved to db");
+                        return true;
+                    })
+                } catch {
+                    return false;
+                }
             } else {
                 return false;
             }
+        }).catch(err => {
+            console.log("failed to find UID... " + err)
+            return false;
         });
 
         return success;

@@ -16,6 +16,7 @@ class UserAccountRoutes {
         app.post('/userAccount/create/', (req, res) => {
             var userAccount = new UserAccount_1.UserAccount;
             var lUsername = req.body.username;
+            console.log("Creating user...");
             var lSeed = userAccount.createMnemonicWords();
             var keys = userAccount.createAccountKeys(lSeed);
             var lPrivateKey = lPrivateKey = keys[0];

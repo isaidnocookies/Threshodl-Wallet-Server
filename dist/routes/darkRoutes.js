@@ -29,12 +29,6 @@ class DarkRoutes {
             var breakEstimation = darkWallet.estimateBreaks(amount);
             var walletValues;
             var walletReturn = new Object();
-            if (saveToDB !== true) {
-                saveToDB = false;
-            }
-            else {
-                saveToDB = true;
-            }
             let api;
             if (coin.charAt(0) === "t") {
                 network = 2;
@@ -95,12 +89,9 @@ class DarkRoutes {
                     var splitKeys = darkWallet.splitPrivateKey(wallet.privateKey.toString());
                     walletReturn[i] = { address: wallet.address, privateKey: splitKeys.user, value: walletValues[i] };
                     creatorApi = null;
-                    // save wallets to db...
-                    if (saveToDB) {
-                        darkWallet.saveMicroWallet(ownerId, wallet.address, splitKeys.server, splitKeys.user);
-                    }
-                    else {
-                        console.log("Save wallets to db disabled...");
+                    if (!darkWallet.saveMicroWallet(ownerId, wallet.address, splitKeys.server, splitKeys.user)) {
+                        res.status(200).send({ success: false });
+                        return;
                     }
                 }
                 res.status(200).send({ success: true, fee: fee, coin: (coinPrefix + coin), wallets: walletReturn });
