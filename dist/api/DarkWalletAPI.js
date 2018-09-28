@@ -280,7 +280,7 @@ class DarkWallet {
     getMicroWallet(uid) {
         return __awaiter(this, void 0, void 0, function* () {
             var MicroWalletObject = mongoose.model('MicroWalletObject', microWalletModel_1.MicroWalletSchema);
-            var theReturn = MicroWalletObject.find({ uniqueid: uid }).then(docs => {
+            return yield MicroWalletObject.find({ uniqueid: uid }).then(docs => {
                 if (docs.length >= 1) {
                     return { success: true, uid: docs[0].uniqueid, owner: docs[0].owner, privatekey: docs[0].privatekey, secretKey: docs[0].secretkey, created: docs[0].created_date };
                 }
@@ -290,8 +290,6 @@ class DarkWallet {
             }).catch(() => {
                 return { success: false };
             });
-            yield theReturn;
-            return theReturn;
         });
     }
     deleteMicroWallet(uid) {

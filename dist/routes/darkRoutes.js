@@ -188,7 +188,6 @@ class DarkRoutes {
                     for (var i = 0; i < uid.length; i++) {
                         try {
                             var completedWallet = yield darkWallet.getMicroWallet(uid[i]);
-                            console.log(completedWallet);
                             if (completedWallet.success) {
                                 walletReturn[uid[i]] = { uid: completedWallet.uid, owner: completedWallet.owner, privatekey: completedWallet.privatekey, secretkey: completedWallet.secretkey };
                                 if (!darkWallet.completeMicroWallet(uid[i])) {
