@@ -30,7 +30,6 @@ class DarkWallet {
         }
 
         while (valuesToBreak.length > 0) {
-            console.log(valuesToBreak);
             var valueToBreak : string = valuesToBreak.pop();
             var splitValue : any = this.splitValues(valueToBreak);
 
@@ -200,11 +199,43 @@ class DarkWallet {
                 return false;
             }
         }).catch(err => {
-            console.log("failed to find UID... " + err)
+            console.log("failed on find() of UID... " + err)
             return false;
         });
 
         return success;
+    }
+
+    getMicroWalletUID(address : string, coin : string) {
+        var date = new Date();
+        var timestamp : string = date.getTime().toString();
+        var uid : string = coin + address + timestamp;
+        var random : string = Math.random().toString();
+        random = random.substr(random.indexOf(".") + 1);
+        uid = random + this.simpleHash(uid).toString() + timestamp;
+        var newUID : string = timestamp + coin.toLowerCase();
+
+        for (var i = 0; i < 64; i++) {
+            if (i < uid.length) { newUID = newUID + uid.charAt(i); }
+            if (i < address.length) { newUID = newUID + address.charAt(i); }
+            if (i >= uid.length && i >= address.length) { break; }
+        }
+
+        newUID = newUID.replace("-", "0");
+        return newUID;
+    }
+
+    simpleHash(value : string) {
+        var hash : number = 0;
+        if (value.length == 0) {
+            return hash;
+        }
+        for (var i = 0; i < value.length; i++) {
+            var char = value.charCodeAt(i);
+            hash = ((hash<<5)-hash)+char;
+            hash = hash & hash; // Convert to 32bit integer
+        }
+        return hash;
     }
 
     checkUID(uid : string) {
@@ -231,14 +262,40 @@ class DarkWallet {
         });
     }
 
-    getMicroWallet(uid : string) {
+    async completeMicroWallet(uid : string) {
         var MicroWalletObject : any = mongoose.model('MicroWalletObject', MicroWalletSchema);
-        return MicroWalletObject.find({uniqueid : uid}).then(docs => {
+        return await MicroWalletObject.find({uniqueid : uid}).then(docs => {
             if (docs.length) {
+                docs[0].hasbeencompleted = true;
+                return docs[0].save();
+            } else {
+                throw new Error ("UID not found");
+            }
+        });
+    }
+
+    async revertCompleteMicroWallet(uid : string) {
+        var MicroWalletObject : any = mongoose.model('MicroWalletObject', MicroWalletSchema);
+        return await MicroWalletObject.find({uniqueid : uid}).then(docs => {
+            if (docs.length) {
+                docs[0].hasbeencompleted = false;
+                return docs[0].save();
+            } else {
+                throw new Error ("UID not found");
+            }
+        });
+    }
+
+    async getMicroWallet(uid : string) {
+        var MicroWalletObject : any = mongoose.model('MicroWalletObject', MicroWalletSchema);
+        return await MicroWalletObject.find({uniqueid : uid}).then(docs => {
+            if (docs.length >= 1) {
                 return {success : true, uid : docs[0].uniqueid, owner : docs[0].owner, privatekey : docs[0].privatekey, secretKey : docs[0].secretkey, created : docs[0].created_date}
             } else {
                 throw new Error ("UID not found");
             }
+        }).catch(() => {
+            return {success : false};
         });
     }
 
@@ -266,6 +323,9 @@ class DarkWallet {
             } else {
                 throw new Error ("UID not found");
             }
+        }).catch((error) => {
+            console.log("327: " + error);
+            return false;
         });
     }
 
@@ -274,26 +334,31 @@ class DarkWallet {
         var UserAccountObject : any = mongoose.model('UserAccountObject', UserAccountSchema);
         var newOwnerUsername : string = iNewOwnerUsername.toLowerCase();
 
-        return await UserAccountObject.find({username: newOwnerUsername}).then((uquery, err) => {
+        return await UserAccountObject.find({username: newOwnerUsername}).then((uquery) => {
             if (uquery === null) {
                 return false;
             } else {
-                var newOwnerId : string = uquery[0].uniqueid;
-                return MicroWalletObject.find({uniqueid : uid}).then((mquery, err) => {
-                    if (mquery === null) {
-                        console.log("Transfer failed. UID not found..  Error: " + err)
-                        return false;
-                    } else {
-                        if (mquery[0].owner === currentOwnerId) {
-                            mquery[0].previousowner = currentOwnerId;
-                            mquery[0].owner = newOwnerId;
-                            return mquery[0].save();
-                        } else {
-                            console.log("Invalid owner... Do not have access to this wallet");
+                try {
+                    var newOwnerId : string = uquery[0].uniqueid;
+                    return MicroWalletObject.find({uniqueid : uid}).then((mquery, err) => {
+                        if (mquery === null) {
+                            console.log("Transfer failed. UID not found..  Error: " + err)
                             return false;
+                        } else {
+                            if (mquery[0].owner === currentOwnerId) {
+                                mquery[0].previousowner = currentOwnerId;
+                                mquery[0].owner = newOwnerId;
+                                return mquery[0].save();
+                            } else {
+                                console.log("Invalid owner... Do not have access to this wallet");
+                                return false;
+                            }
                         }
-                    }
-                });
+                    });
+                } catch {
+                    console.log("Caught error with user query..");
+                    return false;
+                }
             }
         }).catch((err) => {
             console.log("Caught error in transfer... " + err);

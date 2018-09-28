@@ -25,6 +25,10 @@ exports.MicroWalletSchema = new Schema({
     secretkey: {
         type: String
     },
+    hasbeencompleted: {
+        type: Boolean,
+        default: false
+    },
     version: {
         type: String,
         required: 'Requires version'

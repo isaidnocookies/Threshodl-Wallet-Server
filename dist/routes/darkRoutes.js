@@ -1,4 +1,12 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const DarkWalletAPI_1 = require("../api/DarkWalletAPI");
 const UserAccount_1 = require("../api/UserAccount");
@@ -22,7 +30,7 @@ class DarkRoutes {
             var coin = req.body.coin;
             var amount = req.body.value;
             var ownerId = req.body.ownerId;
-            var saveToDB = req.body.save;
+            // var saveToDB : boolean = req.body.save;
             var coinPrefix;
             var network;
             var amountMinusFee;
@@ -87,9 +95,10 @@ class DarkRoutes {
                     }
                     var wallet = creatorApi.createWallet(network, "");
                     var splitKeys = darkWallet.splitPrivateKey(wallet.privateKey.toString());
-                    walletReturn[i] = { address: wallet.address, privateKey: splitKeys.user, value: walletValues[i] };
+                    var uid = darkWallet.getMicroWalletUID(wallet.address, coin);
+                    walletReturn[i] = { address: wallet.address, uniqueid: uid, privateKey: splitKeys.user, value: walletValues[i] };
                     creatorApi = null;
-                    if (!darkWallet.saveMicroWallet(ownerId, wallet.address, splitKeys.server, splitKeys.user)) {
+                    if (!darkWallet.saveMicroWallet(ownerId, uid, splitKeys.server, splitKeys.user)) {
                         res.status(200).send({ success: false });
                         return;
                     }
@@ -164,6 +173,55 @@ class DarkRoutes {
             else {
                 res.send(JSON.stringify({ success: lSuccess, estimate: breakEstimate, feeEstimate: "-1" }));
             }
+        });
+        app.post('/dark/completeWallets/', (req, res) => {
+            var darkWallet = new DarkWalletAPI_1.DarkWallet();
+            var userAccount = new UserAccount_1.UserAccount();
+            var owner = req.body.ownerId;
+            var uid = req.body.uid;
+            var walletReturn = new Object();
+            var authMessage = req.body.message;
+            var password = req.body.password;
+            var success = true;
+            userAccount.authenticateRequest(owner, authMessage, password).then((confirmed) => __awaiter(this, void 0, void 0, function* () {
+                if (confirmed) {
+                    for (var i = 0; i < uid.length; i++) {
+                        try {
+                            var completedWallet = yield darkWallet.getMicroWallet(uid[i]);
+                            console.log(completedWallet);
+                            if (completedWallet.success) {
+                                walletReturn[uid[i]] = { uid: completedWallet.uid, owner: completedWallet.owner, privatekey: completedWallet.privatekey, secretkey: completedWallet.secretkey };
+                                if (!darkWallet.completeMicroWallet(uid[i])) {
+                                    success = false;
+                                }
+                            }
+                        }
+                        catch (_a) {
+                            success = false;
+                        }
+                    }
+                    if (success) {
+                        res.send(JSON.stringify({ success: true, wallets: walletReturn }));
+                    }
+                    else {
+                        for (var i = 0; i < uid.length; i++) {
+                            try {
+                                if (!darkWallet.revertCompleteMicroWallet(uid[i])) {
+                                    console.log("Failed to revert changes.. " + uid);
+                                }
+                            }
+                            catch (_b) {
+                                console.log("Failed to revert changes and was caught.. " + uid);
+                            }
+                        }
+                    }
+                }
+                else {
+                    res.send(JSON.stringify({ success: false, message: "Failed to authenticate" }));
+                }
+            })).catch(() => {
+                res.send(JSON.stringify({ success: false, message: "Failed to authenticate" }));
+            });
         });
         app.post('/dark/send/', (req, res) => {
             var darkWallet = new DarkWalletAPI_1.DarkWallet();

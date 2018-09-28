@@ -38,13 +38,14 @@ class UserAccount {
 
     createAccount(iUsername : string, iUid : string, iPublicKey : string) {
         var UserAccountObject : any = mongoose.model('UserAccountObject', UserAccountSchema);
+        var username : string = iUsername.toLowerCase();
 
-        return this.checkUsername(iUsername).then(isFound => {
+        return this.checkUsername(username).then(isFound => {
             if (isFound) {
                 console.log("User already exists");
                 return false;
             } else {
-                const newUser = new UserAccountObject({recordtype: "user", username: iUsername, uniqueid: iUid, publickey: iPublicKey, version: "1.0.0"});
+                const newUser = new UserAccountObject({recordtype: "user", username: username, uniqueid: iUid, publickey: iPublicKey, version: "1.0.0"});
                 return newUser.save().then(() => {
                     console.log('New user was saved to db');
                     return true;
@@ -77,10 +78,11 @@ class UserAccount {
     }
 
     checkUsername(iUsername : string) {
+        var username : string = iUsername.toLowerCase();
         var UserAccountObject : any = mongoose.model('UserAccountObject', UserAccountSchema);
-        return UserAccountObject.find({username : iUsername}).then(docs => {
+        return UserAccountObject.find({username : username}).then(docs => {
             if (docs.length){             
-                console.log('user exists: ', iUsername);
+                console.log('user exists: ', username);
                 return true;
             } else {
                 return false;
@@ -107,8 +109,9 @@ class UserAccount {
         return false;
     }
 
-    async changeUsername(iPublicKey : string, newUsername : string) {
+    async changeUsername(iPublicKey : string, iNewUsername : string) {
         var UserAccountObject : any = mongoose.model('MicroWalletObject', UserAccountSchema);
+        var newUsername : string = iNewUsername.toLowerCase();
         return await UserAccountObject.find({publickey : iPublicKey}).then((query, err) => {
             if (query === null) {
                 console.log("Transfer failed. Public Key not found..  Error: " + err)
