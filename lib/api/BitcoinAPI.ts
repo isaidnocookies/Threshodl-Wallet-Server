@@ -63,9 +63,9 @@ class BitcoinAPI extends CryptoAPI {
 
         const axios = require('axios');
         return axios({
-            method:'get',
-            url:insightUrl + '/addr/' + address,
-            responseType:'application/json'
+            method: 'get',
+            url: insightUrl + '/addr/' + address,
+            responseType: 'application/json'
         }).then(function(response) {
             return ({"confirmed" : response.data.balance, "unconfirmed": response.data.unconfirmedBalance});
         }).catch(error => {
@@ -122,6 +122,14 @@ class BitcoinAPI extends CryptoAPI {
             console.log(error);
             return "-1";
         });
+    }
+
+    async createMultiInTransactionHex(chainType: Network, fromAddresses: string[], fromPrivateKeys: string[], toAddresses: string[], toAmounts: string[], message: string) {
+        var total : number = 0.0;
+
+        for (var i = 0; i < toAmounts.length; i++) {
+            total = total + (parseFloat(toAmounts[i]) / 0.00000001);
+        }
     }
 
     async createTransactionHex(chainType: Network, fromAddress: string, fromPrivateKey: string, toAddresses: string[], toAmounts: string[], message: string) {

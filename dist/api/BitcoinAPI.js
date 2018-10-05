@@ -124,6 +124,14 @@ class BitcoinAPI extends CryptoAPI_1.CryptoAPI {
             return "-1";
         });
     }
+    createMultiInTransactionHex(chainType, fromAddresses, fromPrivateKeys, toAddresses, toAmounts, message) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var total = 0.0;
+            for (var i = 0; i < toAmounts.length; i++) {
+                total = total + (parseFloat(toAmounts[i]) / 0.00000001);
+            }
+        });
+    }
     createTransactionHex(chainType, fromAddress, fromPrivateKey, toAddresses, toAmounts, message) {
         return __awaiter(this, void 0, void 0, function* () {
             var total = 0.0;

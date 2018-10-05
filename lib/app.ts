@@ -1,6 +1,8 @@
 import * as express from "express";
 import * as bodyParser from "body-parser";
 import * as mongoose from "mongoose";
+import * as https from "https";
+import * as fs from "fs";
 
 import { Routes } from "./routes/routes";
 import { UserAccountRoutes } from "./routes/userAccountRoutes";
@@ -10,8 +12,8 @@ import { DarkRoutes } from "./routes/darkRoutes";
 
 class App {
     public app: express.Application;
-
     public configuration : any = new Config();
+    public server : https.Server;
 
     public baseRoutes: Routes = new Routes();
     public userAccountRoutes: UserAccountRoutes = new UserAccountRoutes();
@@ -43,6 +45,3 @@ class App {
 }
 
 export default new App().app;
-
-//npm run build
-//rpm start dev
