@@ -1,6 +1,6 @@
 # Official framework image. Look for the different tagged releases at:
 # https://hub.docker.com/r/library/node/tags/
-image: node:latest
+#image: node:latest
 
 # Pick zero or more services to be used on all builds.
 # Only needed when using a docker container to run your tests in.
@@ -9,6 +9,7 @@ image: node:latest
 #  - mongodb:latest
 #  - redis:latest
 #  - postgres:latest
+#  - typescript:latest
 
 # This folder is cached between builds
 # http://docs.gitlab.com/ce/ci/yaml/README.html#cache
@@ -16,11 +17,9 @@ cache:
   paths:
   - node_modules/
 
-test_async:
-  script:
-   - npm install
-   - npm run build && npm start
+before_script:
+  - npm install
 
-#test_db:
-#  script:
-#   - npm install
+build:
+  script:
+  - npm run build
