@@ -16,11 +16,11 @@ cache:
   paths:
   - node_modules/
 
-test_async:
+#test_async:
   script:
    - npm install
    - npm run build && npm start
 
-test_db:
-  script:
-   - npm install
+#test_db:
+#  script:
+#   - npm install
