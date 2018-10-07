@@ -18,7 +18,7 @@ services:
       - docker:dind
 
 before_script:
-      - echo "$ACCOUNT_PASSWORD" | docker login -u $ACCOUNT_USERNAME --password-stdin registry.gitlab.com
+      - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN
 
 stages:
 - build
