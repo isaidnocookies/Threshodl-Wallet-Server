@@ -12,15 +12,13 @@ image: docker:latest
 
 variables:
       dockerTag: '$CI_BUILD_REF'
-      CONTAINER_IMAGE: threebx/threshodl/threshodl-wallet-server:latest
+      CONTAINER_IMAGE: registry.gitlab.com/threebx/threshodl/threshodl-wallet-server:latest
 
 services:
       - docker:dind
 
 before_script:
       - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
-      #- echo "$CI_JOB_TOKEN" | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
-      #- echo "$ACCOUNT_PASSWORD" | docker login -u $ACCOUNT_USERNAME --password-stdin registry.gitlab.com
 
 stages:
 - build
