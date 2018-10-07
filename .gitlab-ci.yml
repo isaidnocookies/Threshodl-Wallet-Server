@@ -29,4 +29,4 @@ build:
       stage: build
       script:
             - docker build -t $CONTAINER_IMAGE .
-            - docker push registry.gitlab.com/$CONTAINER_IMAGE
+            - docker push $CONTAINER_IMAGE
