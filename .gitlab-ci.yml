@@ -1,9 +1,30 @@
-image: node:latest
+# image: node:latest
+#
+# before_script:
+# - npm install
+# - npm install -g typescript
+#
+# build:
+#   script:
+#   - npm run build
+
+image: docker:latest
+
+variables:
+      dockerTag: '$CI_BUILD_REF'
+      CONTAINER_IMAGE: threebx/threshodl/threshodl-wallet-server:1
+
+services:
+      docker:dind
 
 before_script:
-- npm install
-- npm install -g typescript
+      - docker login -u CI_DEPLOY_USER -p CI_DEPLOY_PASSWORD registry.gitlab.com
+
+stages:
+- build
 
 build:
-  script:
-  - npm run build
+      stage: build
+      script:
+            - docker build -t $CONTAINER_IMAGE .
+            - docker push $CONTAINER_IMAGE
