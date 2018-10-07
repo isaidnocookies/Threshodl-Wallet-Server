@@ -13,4 +13,7 @@ RUN npm install -g typescript
 COPY . /usr/src/app
 
 EXPOSE 3333
-CMD [ "npm", "start dev" ]
+
+RUN tsc
+
+CMD [ "npm", "start" ]
