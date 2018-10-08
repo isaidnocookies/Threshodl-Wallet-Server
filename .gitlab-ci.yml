@@ -28,3 +28,6 @@ build:
       script:
             - docker build -t $CONTAINER_IMAGE .
             - docker push $CONTAINER_IMAGE
+      only:
+            - development
+            - production
