@@ -1,13 +1,3 @@
-# image: node:latest
-#
-# before_script:
-# - npm install
-# - npm install -g typescript
-#
-# build:
-#   script:
-#   - npm run build
-
 image: docker:latest
 
 variables:
