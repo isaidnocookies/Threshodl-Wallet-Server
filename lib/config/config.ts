@@ -8,7 +8,7 @@ export class Config
 
     db : any = {
         production : {
-            url: "mongodb+srv://thdlDev:pass123!@thdldev-pdprj.mongodb.net/thdlDev?retryWrites=true"
+            url: "mongodb://thdl:9msb6kvSlJz3elwLdJ9f@18.224.238.46/threshodl?retryWrites=true" // change to url or hostname __ use dns resolution
         },
         test : {
             url: "mongodb://localhost/Threshodl"

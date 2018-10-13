@@ -112,18 +112,18 @@ class UserAccount {
     async changeUsername(iPublicKey : string, iNewUsername : string) {
         var UserAccountObject : any = mongoose.model('MicroWalletObject', UserAccountSchema);
         var newUsername : string = iNewUsername.toLowerCase();
-        return await UserAccountObject.find({publickey : iPublicKey}).then((query, err) => {
-            if (query === null) {
-                console.log("Transfer failed. Public Key not found..  Error: " + err)
-                return false;
-            } else {
-                query[0].username = newUsername;
-                return query[0].save().then(() => {
+        return await UserAccountObject.find({publickey : iPublicKey}).then(docs => {
+            if (docs.length !== 0) {
+                docs[0].username = newUsername;
+                return docs[0].save().then(() => {
                     return true;
                 }).catch(() => {
                     console.log("caught by change username....");
                     return false;
                 });
+            } else {
+                console.log("Transfer failed. Public Key not found..  Error..");
+                return false;
             }
         });
     }

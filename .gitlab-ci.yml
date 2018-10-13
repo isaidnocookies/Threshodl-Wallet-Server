@@ -11,7 +11,7 @@ before_script:
       - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
 
 stages:
-- build
+      - build
 
 build:
       stage: build

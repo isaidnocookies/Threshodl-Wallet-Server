@@ -41,6 +41,19 @@ export class UserAccountRoutes {
             });
         });
 
+        app.post('/userAccount/changeUsername/', (req: Request, res: Response) => {
+            var userAccount : any = new UserAccount;
+
+            var lUsername: string = req.body.username;
+            var lPublicKey : string = req.body.publickey;
+            
+            userAccount.changeUsername(lPublicKey, lUsername).then(success => {
+                res.send(JSON.stringify({ success: success, username: lUsername }));
+            }).catch((error) => {
+                res.send(JSON.stringify({ success: false, message: `${error}` }));
+            });
+        });
+
         app.post('/userAccount/recover/', (req: Request, res: Response) => {
             var userAccount : any = new UserAccount;
 
