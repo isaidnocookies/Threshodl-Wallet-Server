@@ -110,7 +110,7 @@ class UserAccount {
     }
 
     async changeUsername(iPublicKey : string, iNewUsername : string) {
-        var UserAccountObject : any = mongoose.model('MicroWalletObject', UserAccountSchema);
+        var UserAccountObject : any = mongoose.model('UserAccountObject', UserAccountSchema);
         var newUsername : string = iNewUsername.toLowerCase();
         return await UserAccountObject.find({publickey : iPublicKey}).then(docs => {
             if (docs.length !== 0) {
