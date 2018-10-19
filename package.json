@@ -1,12 +1,12 @@
 {
   "name": "wallet-server",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Threshodl Wallet Server Project by ThreeBx",
+  "main": "app.js",
   "scripts": {
     "build": "tsc",
-    "dev": "ts-node ./lib/server.ts",
-    "start": "node ./dist/server.js",
+    "dev": "ts-node ./lib/app.ts",
+    "start": "node ./dist/app.js",
     "prod": "npm run build && npm start"
   },
   "keywords": [],
@@ -25,6 +25,7 @@
     "dashcore-lib": "^8.2.3",
     "express": "^4.16.3",
     "express-force-ssl": "^0.3.2",
+    "helmet": "^3.14.0",
     "http": "0.0.0",
     "https": "^1.0.0",
     "litecore-lib": "^0.13.22",
@@ -33,10 +34,6 @@
     "pg": "^7.4.3",
     "pg-hstore": "^2.3.2",
     "request": "^2.87.0",
-    "sequelize": "^4.38.0",
     "zcash-bitcore-lib": "^0.13.20-rc3"
-  },
-  "devDependencies": {
-    "@types/sequelize": "^4.27.23"
   }
 }

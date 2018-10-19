@@ -2,6 +2,8 @@ export class Config
 {
     localEnvironment : boolean = true;
 
+    port : number = 3333;
+
     authentication : any = {
         password: "threshodlpassword"
     };
