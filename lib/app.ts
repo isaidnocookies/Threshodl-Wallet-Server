@@ -71,9 +71,17 @@ class App {
     // Listen using server created in createServer()
     private listen(): void {
         var port : number = this.configuration.port;
-        this.server.listen(port, function () {
-            console.log(`Server running at ${port}`);
-        });
+
+        if (this.configuration.localEnvironment) {
+            this.app.listen(port, function () {
+                console.log(`HTTP server running at ${port}`);
+            });
+        } else {
+            this.server.listen(port, function () {
+                console.log(`HTTPS server running at ${port}`);
+            });
+        }
+
     }
 }
 

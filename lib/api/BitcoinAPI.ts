@@ -130,7 +130,7 @@ class BitcoinAPI extends CryptoAPI {
         for (var i = 0; i < toAmounts.length; i++) {
             total = total + (parseFloat(toAmounts[i]) / 0.00000001);
         }
-    }
+    } 
 
     async createTransactionHex(chainType: Network, fromAddress: string, fromPrivateKey: string, toAddresses: string[], toAmounts: string[], message: string) {
         var total : number = 0.0;
@@ -217,15 +217,16 @@ class BitcoinAPI extends CryptoAPI {
     sendTransactionHex(chainType: Network, txHex : string) {
         const axios = require('axios');
 
-        // var insightUrl : string;
-        var nodeUrl : string;
+        var insightUrl : string;
+        // var nodeUrl : string;
+        console.log("Sending transaction... : " + txHex);
 
         if (chainType === 1) {
-            // insightUrl = this.config.insightServers.btc.main;
-            nodeUrl = this.config.nodes.btc.main;
+            insightUrl = this.config.insightServers.btc.main;
+            // nodeUrl = this.config.nodes.btc.main;
         } else {
-            // insightUrl = this.config.insightServers.btc.testnet;
-            nodeUrl = this.config.nodes.btc.testnet;
+            insightUrl = this.config.insightServers.btc.testnet;
+            // nodeUrl = this.config.nodes.btc.testnet;
         }
 
         return axios({
@@ -233,17 +234,18 @@ class BitcoinAPI extends CryptoAPI {
             headers: {
               'Content-Type': 'application/json'
             },
-            url: nodeUrl,
+            url: insightUrl,
             data: {
-              method: 'sendrawtransaction',
-              'params': [txHex]
+                rawTx: txHex
+            //   method: 'sendrawtransaction',
+            //   'params': [txHex]
             }
           }).then(response => {
-            if (response.data.result && response.data.result.error == null) {
-              return response.data.result;
+            if (response.data.txid && response.status == 200) {
+                return response.data.txid;
             } else {
               let message = {
-                message: `Error sending raw transaction: ${this.coin.toUpperCase()} ---- ${response.data.result.error}.`,
+                message: `Error sending raw transaction: ${this.coin.toUpperCase()} ---- ${response.data}.`,
                 data: response,
               };
               throw new Error(`${this.coin} - Error sending raw transaction. Error  ${JSON.stringify(message)}`);
