@@ -208,15 +208,17 @@ export class WalletRoutes {
         });
 
         app.post('/wallets/createTransaction/', (req: Request, res: Response) => {
-            var coin : string = req.body.coin;
-            var network : number;
-            var fromAddress : string = req.body.fromAddress;
-            var fromPrivateKey : string = req.body.fromPrivateKey;
-            var toAddresses : string[] = req.body.toAddresses;
-            var toAmounts : string[] = req.body.toAmounts;
-            var message : string = req.body.message;
+            var coin: string = req.body.coin;
+            var network: number;
+            var fromAddresses: string[] = req.body.fromAddresses;
+            var fromPrivateKeys: string[] = req.body.fromPrivateKeys;
+            var toAddresses: string[] = req.body.toAddresses;
+            var toAmounts: string[] = req.body.toAmounts;
+            var returnAddress : string = req.body.returnAddress
+            var fee : string = req.body.fee;
+            var message: string = req.body.message;
 
-            let api : CryptoAPI;
+            let api: CryptoAPI;
 
             if (coin.charAt(0) === "t") {
                 network = 2;
@@ -225,21 +227,25 @@ export class WalletRoutes {
                 network = 1;
             }
 
-            switch(coin) {
+            switch (coin) {
                 case 'BTC': api = new BitcoinAPI; break;
                 case 'LTC': api = new LitecoinAPI; break;
                 case 'DASH': api = new DashAPI; break;
                 case 'ZEC': api = new ZCashAPI; break;
                 case 'DOGE': api = new DogecoinAPI; break;
                 default:
-                    res.status(400).send(JSON.stringify({success: false}));
+                    res.status(400).send(JSON.stringify({ success: false }));
                     return;
             }
-            
-            var lSuccess : boolean;
-            var lReturn : string;
-            api.createTransactionHex(network, fromAddress, fromPrivateKey, toAddresses, toAmounts, message).then(txReturn => {
-                // TODO : handle errors
+
+            var lSuccess: boolean;
+            var lReturn: string;
+
+            if (!fee) {
+                fee = "";
+            }
+
+            api.createTransactionHex(network, fromAddresses, fromPrivateKeys, toAddresses, toAmounts, returnAddress, fee, message).then(txReturn => {
                 lReturn = txReturn;
 
                 if (lReturn === "") {
@@ -248,11 +254,11 @@ export class WalletRoutes {
                     lSuccess = true;
                 }
 
-                res.status(200).send(JSON.stringify({success: lSuccess, message: lReturn}));
+                res.status(200).send(JSON.stringify({ success: lSuccess, message: lReturn }));
                 return;
             }).catch((error) => {
                 console.log(`Error on createTransactionHex: ${error}`);
-                res.status(200).send(JSON.stringify({success: false, message: `${error}`}));
+                res.status(200).send(JSON.stringify({ success: false, message: `${error}` }));
             });
         });
 

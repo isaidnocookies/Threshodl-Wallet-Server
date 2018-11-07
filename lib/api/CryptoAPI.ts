@@ -13,7 +13,7 @@ abstract class CryptoAPI {
     abstract getTransactionFee(chainType : Network, inputs : number, outputs : number) : any;
     abstract send(chainType : Network, fromAddress : string, fromPrivateKey : string, toAddresses : string[], toAmounts : string[]) : any;
     abstract getUnspentTransactions(chainType : Network, address : string, amount : string) : any;
-    abstract createTransactionHex(network: Network, fromAddress : string, fromPrivateKey : string, toAddresses : string[], toAmounts : string[], message : string) : any;
+    abstract createTransactionHex(network: Network, fromAddresses : string[], fromPrivateKeys : string[], toAddresses : string[], toAmounts : string[], returnAddress : string, fee : string, message : string) : any;
     abstract sendTransactionHex(network: Network, rawTransaction : string) : any;
 }
 

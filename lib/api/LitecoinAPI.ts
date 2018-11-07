@@ -123,18 +123,21 @@ class LitecoinAPI extends CryptoAPI {
         });
     }
     
-    async createTransactionHex(chainType: Network, fromAddress: string, fromPrivateKey: string, toAddresses: string[], toAmounts: string[], message: string) {
+    async createTransactionHex(chainType: Network, fromAddresses: string[], fromPrivateKeys: string[], toAddresses: string[], toAmounts: string[], returnAddress: string, fee : string, message: string) {
         var total : number = 0.0;
 
         for (var i = 0; i < toAmounts.length; i++) {
             total = total + (parseFloat(toAmounts[i]) / 0.00000001);
         }
 
+        var fromAddress : string = fromAddresses[0];
+        var fromPrivateKey : string = fromPrivateKeys[0];
+
         var feeEstimate : string = await this.getTransactionFee(chainType, 2, 2);
 
         return this.getUnspentTransactions(chainType, fromAddress, String(total)).then(utxos => {
             if (utxos) {
-                if (!fromPrivateKey || toAddresses.length <= 0 || toAddresses.length != toAmounts.length) {
+                if (!fromPrivateKeys || toAddresses.length <= 0 || toAddresses.length != toAmounts.length) {
                     throw new Error(`${this.coin} - Error with send parameters.`);
                 }
 
@@ -247,7 +250,11 @@ class LitecoinAPI extends CryptoAPI {
     }
 
     send(chainType: Network, fromAddress: string, fromPrivateKey: string, toAddresses: string[], toAmounts: string[]) {
-        return this.createTransactionHex(chainType, fromAddress, fromPrivateKey, toAddresses, toAmounts, "").then(txhex => {
+        var fromAddresses : string[] = [fromAddress];
+        var fromPrivateKeys : string[] = [fromPrivateKey];
+        var returnAddress : string = fromAddress;
+        var fee : string = "0.0001";
+        return this.createTransactionHex(chainType, fromAddresses, fromPrivateKeys, toAddresses, toAmounts, fee, returnAddress, "").then(txhex => {
             return this.sendTransactionHex(chainType, txhex).then(txid => {
                 return txid;
             }).catch(error => {
