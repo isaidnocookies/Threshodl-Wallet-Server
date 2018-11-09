@@ -171,42 +171,6 @@ export class WalletRoutes {
             });
         });
 
-        app.post('/wallets/send/', (req: Request, res: Response) => {
-            var coin : string = req.body.coin;
-            var network : number;
-            var fromAddress : string = req.body.fromAddress;
-            var fromPrivateKey : string = req.body.fromPrivateKey;
-            var toAddresses : string[] = req.body.toAddresses;
-            var toAmounts : string[] = req.body.toAmounts;
-
-            let api : CryptoAPI;
-
-            if (coin.charAt(0) === "t") {
-                network = 2;
-                coin = coin.substring(1, coin.length)
-            } else {
-                network = 1;
-            }
-
-            switch(coin) {
-                case 'BTC': api = new BitcoinAPI; break;
-                case 'LTC': api = new LitecoinAPI; break;
-                case 'DASH': api = new DashAPI; break;
-                case 'ZEC': api = new ZCashAPI; break;
-                case 'DOGE': api = new DogecoinAPI; break;
-                default:
-                    res.status(401).send(JSON.stringify({success: false}));
-                    return;
-            }
-
-            api.send(network, fromAddress, fromPrivateKey, toAddresses, toAmounts).then(txReturn => {
-                // TODO : handle errors
-                res.status(200).send(JSON.stringify({success: true, txid: txReturn}));
-            }).catch((error) => {
-                res.status(200).send(JSON.stringify({success: false, message: `${error}`}));
-            });
-        });
-
         app.post('/wallets/createTransaction/', (req: Request, res: Response) => {
             var coin: string = req.body.coin;
             var network: number;
@@ -291,7 +255,6 @@ export class WalletRoutes {
             var lTxid : string;
 
             api.sendTransactionHex(network, rawTransactoinHex).then(txReturn => {
-                // TODO : handle errors
                 lTxid = txReturn;
 
                 if (lTxid === "") {

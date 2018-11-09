@@ -247,22 +247,6 @@ class DashAPI extends CryptoAPI {
             throw new Error(`${this.coin} - Error sending raw transaction.`);
           });
     }
-
-    send(chainType: Network, fromAddress: string, fromPrivateKey: string, toAddresses: string[], toAmounts: string[]) {
-        var fromAddresses : string[] = [fromAddress];
-        var fromPrivateKeys : string[] = [fromPrivateKey];
-        var returnAddress : string = fromAddress[0];
-        var fee : string = "0.0001"; // fee should be fixed....
-        return this.createTransactionHex(chainType, fromAddresses, fromPrivateKeys, toAddresses, toAmounts, fee, returnAddress, "").then(txhex => {
-            return this.sendTransactionHex(chainType, txhex).then(txid => {
-                return txid;
-            }).catch(error => {
-                throw new Error(`${this.coin} - Error sending raw transaction.`);
-            });
-        }).catch(error => {
-            throw new Error(`${this.coin} - Error creating raw transaction.`);
-        });
-    }
 }
 
 export { DashAPI, Network };

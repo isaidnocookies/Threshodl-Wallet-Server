@@ -245,25 +245,6 @@ class BitcoinAPI extends CryptoAPI {
             throw new Error(`${this.coin} - Error sending raw transaction.`);
           });
     }
-
-    send(chainType: Network, fromAddress: string, fromPrivateKey: string, toAddresses: string[], toAmounts: string[]) {
-        var fromAddresses: string[] = [fromAddress];
-        var fromPrivateKeys: string[] = [fromPrivateKey];
-        var returnAddress: string = fromAddress;
-
-        // figure out fee for send command....
-        var fee : string = "0.0001";
-
-        return this.createTransactionHex(chainType, fromAddresses, fromPrivateKeys, toAddresses, toAmounts, fee, returnAddress, "").then(txhexReturn => {
-            return this.sendTransactionHex(chainType, txhexReturn.txHex).then(txid => {
-                return txid;
-            }).catch(error => {
-                throw new Error(`${this.coin} - Error sending raw transaction. Error --- ${error}`);
-            });
-        }).catch(error => {
-            throw new Error(`${this.coin} - Error creating raw transaction. Error --- ${error}`);
-        });
-    }
 }
 
 export { BitcoinAPI, Network };
