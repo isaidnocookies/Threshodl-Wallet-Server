@@ -18,6 +18,15 @@ build:
       script:
             - docker build -t $CONTAINER_IMAGE .
             - docker push $CONTAINER_IMAGE
+      when: manual
       only:
             - development
+
+build:
+      stage: build
+      script:
+            - docker build -t $CONTAINER_IMAGE .
+            - docker push $CONTAINER_IMAGE
+      when: manual
+      only:
             - production
