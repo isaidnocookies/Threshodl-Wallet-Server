@@ -1,6 +1,8 @@
 import { CryptoAPI, Network } from "./CryptoAPI";
 import { Config } from "../config/config";
 
+var StringMath = require('@isaidnocookies/StringMath');
+
 class BitcoinAPI extends CryptoAPI {
     
     coin: string = "BTC";
@@ -133,15 +135,20 @@ class BitcoinAPI extends CryptoAPI {
     }
 
     async createTransactionHex(chainType: Network, fromAddresses: string[], fromPrivateKeys: string[], toAddresses: string[], toAmounts: string[], returnAddress : string, fee : string, message: string) {
-        var outTotal : number = 0.0;
+        var outTotal : string = "0.00";
+        var inTotal : string = "0.00";
         var inputs : any = [];
-        var inputCount : number = 0;
         var lUtxos : any[] = [];
+        var inputCount : number = 0;
         var thePrivateKeys : any[] = [];
         var transactionFee : string;
+        var stringmath = new StringMath();
+
+        var dynamicFee = (fee === "") ? true : false;
 
         for (var i = 0; i < toAmounts.length; i++) {
-            outTotal = outTotal + (parseFloat(toAmounts[i]) / 0.00000001);
+            // outTotal = outTotal + (parseFloat(toAmounts[i]) / 0.00000001);
+            outTotal = stringmath.add(outTotal, toAmounts[i]);
         }
 
         if (fromAddresses.length != fromPrivateKeys.length && toAddresses.length != toAmounts.length) {
@@ -168,6 +175,7 @@ class BitcoinAPI extends CryptoAPI {
                     };
                     lUtxos.push(utxoIn);
                     inputCount++;
+                    inTotal = stringmath.add(inTotal, unspentTransactions[i].amount.toString());
                 }
                     
                 try {
@@ -180,32 +188,45 @@ class BitcoinAPI extends CryptoAPI {
         } catch {
             throw new Error(`${this.coin} - Error with send parameters.`);
         }
-        
-        try {
-            var transaction = new this.bitcore.Transaction().from(lUtxos);
-            
-            for (var i = 0; i < toAddresses.length; i++) {
-                let inAmount : number = Math.trunc(parseFloat(toAmounts[i]) / 0.00000001);
-                transaction.to(toAddresses[i], inAmount);
+
+        if (stringmath.isLessThanOrEqualTo(outTotal, inTotal)) {
+            throw new Error(`${this.coin} - Not enough for outputs and fees...`);
+        } else {
+            try {
+                var transaction = new this.bitcore.Transaction().from(lUtxos);
+                
+                for (var i = 0; i < toAddresses.length; i++) {
+                    let inAmount : number = Math.trunc(parseFloat(toAmounts[i]) / 0.00000001);
+                    transaction.to(toAddresses[i], inAmount);
+                }
+    
+                if (dynamicFee) {
+                    transactionFee = await this.getTransactionFee(chainType, inputCount, toAddresses.length);
+                } else {
+                    transactionFee = fee;
+                }
+                
+                var paramDiff = stringmath.subtract(inTotal, outTotal);
+                if (stringmath.isLessThan(paramDiff, transactionFee.toString())) {
+                    if (dynamicFee && toAddresses.length === 1) {
+                        transaction.clearOutputs();
+                        var newOutAmount = toAmounts[0];
+                        
+                    }
+                    throw new Error(`${this.coin} - Not enough left for fees...`);
+                }
+    
+                transaction.fee(Math.trunc(parseFloat(transactionFee) / 0.00000001));
+                transaction.change(returnAddress);
+                
+                thePrivateKeys.forEach((pk) => {
+                    transaction.sign(pk);
+                });
+            } catch(error) {
+                throw new Error("Failed to create transaction and sign transaction" + ` ${this.coin}` + `${error}`);
             }
-
-            if (fee !== "") {
-                transactionFee = fee;
-            } else {
-                transactionFee = await this.getTransactionFee(chainType, inputCount, toAddresses.length);
-            }
-
-            transaction.fee(Math.trunc(parseFloat(transactionFee) / 0.00000001));
-            transaction.change(returnAddress);
-            
-            thePrivateKeys.forEach((pk) => {
-                transaction.sign(pk);
-            });
-
-        } catch(error) {
-            throw new Error("Failed to create transaction and sign transaction" + ` ${this.coin}` + `${error}`);
         }
-        
+
         var txHex: string = transaction.toString();
         return ({ "txHex": txHex, "fee": transactionFee });
     }
