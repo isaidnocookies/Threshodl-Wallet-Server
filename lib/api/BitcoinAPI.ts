@@ -115,6 +115,8 @@ class BitcoinAPI extends CryptoAPI {
             insightUrl = this.config.insightServers.btc.testnet;
         }
 
+        let defaultFee : number = 0.0001;
+
         var transactionSize : number = (inputs * 180) + (outputs * 34) + 10; // bytes
 
         return axios({
@@ -123,10 +125,16 @@ class BitcoinAPI extends CryptoAPI {
             responseType:'application/json'
         }).then(function(response) {
             const responseKeys : any = Object.keys(response.data);
+
             if (responseKeys.length != 1) {
-                return 0.0001;
+                return defaultFee;
             }
+
             var feeperkb = response.data[responseKeys[0]];
+            if (feeperkb <= 0) {
+                return defaultFee;
+            }
+
             return (transactionSize * (feeperkb / 1000));
         }).catch(error => {
             console.log(error);
@@ -189,19 +197,20 @@ class BitcoinAPI extends CryptoAPI {
             throw new Error(`${this.coin} - Error with send parameters.`);
         }
 
-        if (stringmath.isLessThanOrEqualTo(outTotal, inTotal)) {
+        if (stringmath.isLessThanOrEqualTo(inTotal, outTotal)) {
             throw new Error(`${this.coin} - Not enough for outputs and fees...`);
         } else {
             try {
                 var transaction = new this.bitcore.Transaction().from(lUtxos);
                 
                 for (var i = 0; i < toAddresses.length; i++) {
-                    let inAmount : number = Math.trunc(parseFloat(toAmounts[i]) / 0.00000001);
-                    transaction.to(toAddresses[i], inAmount);
+                    var outAmount : number = Math.trunc(parseFloat(toAmounts[i]) / 0.00000001);
+                    transaction.to(toAddresses[i], outAmount);
                 }
     
                 if (dynamicFee) {
-                    transactionFee = await this.getTransactionFee(chainType, inputCount, toAddresses.length);
+                    var calculatedTransactionFee = await this.getTransactionFee(chainType, inputCount, toAddresses.length);
+                    transactionFee = calculatedTransactionFee.toString();
                 } else {
                     transactionFee = fee;
                 }
@@ -211,9 +220,14 @@ class BitcoinAPI extends CryptoAPI {
                     if (dynamicFee && toAddresses.length === 1) {
                         transaction.clearOutputs();
                         var newOutAmount = toAmounts[0];
-                        
+
+                        var somethingOrOther = stringmath.subtract(transactionFee, paramDiff);
+                        newOutAmount = stringmath.subtract(newOutAmount, somethingOrOther);
+                        var fuckingNewOutputMinusFee: number = Math.trunc(parseFloat(newOutAmount) / 0.00000001);
+                        transaction.to(toAddresses[0], fuckingNewOutputMinusFee);
+                    } else {
+                        throw new Error(`${this.coin} - Not enough left for fees...`);
                     }
-                    throw new Error(`${this.coin} - Not enough left for fees...`);
                 }
     
                 transaction.fee(Math.trunc(parseFloat(transactionFee) / 0.00000001));
