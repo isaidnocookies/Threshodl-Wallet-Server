@@ -252,10 +252,12 @@ class BitcoinAPI extends CryptoAPI {
         console.log("Sending transaction... : " + txHex);
 
         if (chainType === 1) {
-            insightUrl = this.config.insightServers.btc.main;
+            insightUrl = this.config.insightServers.btc.main + "/tx/send";
         } else {
-            insightUrl = this.config.insightServers.btc.testnet;
+            insightUrl = this.config.insightServers.btc.testnet + "/tx/send";
         }
+
+        console.log(txHex);
 
         return axios({
             method: 'post',
@@ -264,9 +266,10 @@ class BitcoinAPI extends CryptoAPI {
             },
             url: insightUrl,
             data: {
-                rawTx: txHex
+                rawtx: txHex
             }
           }).then(response => {
+              console.log(JSON.stringify(response));
             if (response.data.txid && response.status == 200) {
                 return response.data.txid;
             } else {
