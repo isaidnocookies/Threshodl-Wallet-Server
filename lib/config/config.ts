@@ -63,7 +63,7 @@ export class Config
         },
         btc:{
             main: "https://insight.bitpay.com/api",
-            testnet: "https://testnet.blockexplorer.com/api"
+            testnet: "https://test-insight.bitpay.com/api"
             //testnet: "https://test-insight.bitpay.com/api",
         },
         dash:{
@@ -79,8 +79,6 @@ export class Config
             testnet: "https://explorer.testnet.z.cash/api",
         },
         doge:{
-            // https://dogechain.info/api/blockchain_api
-            // https://chain.so/api/v2/get_address_balance/DOGETEST/2MsQug2PDbor2ndqYu9MxMij3MZFZ3EkGk9
             main: "https://dogechain.info/api/v1",
             testnet: "https://chain.so/api/v2",
         }

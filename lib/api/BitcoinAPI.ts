@@ -155,7 +155,6 @@ class BitcoinAPI extends CryptoAPI {
         var dynamicFee = (fee === "") ? true : false;
 
         for (var i = 0; i < toAmounts.length; i++) {
-            // outTotal = outTotal + (parseFloat(toAmounts[i]) / 0.00000001);
             outTotal = stringmath.add(outTotal, toAmounts[i]);
         }
 
@@ -256,32 +255,32 @@ class BitcoinAPI extends CryptoAPI {
         } else {
             insightUrl = this.config.insightServers.btc.testnet + "/tx/send";
         }
-
-        console.log(txHex);
-
-        return axios({
-            method: 'post',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            url: insightUrl,
-            data: {
-                rawtx: txHex
-            }
-          }).then(response => {
-              console.log(JSON.stringify(response));
-            if (response.data.txid && response.status == 200) {
-                return response.data.txid;
-            } else {
-              let message = {
-                message: `Error sending raw transaction: ${this.coin.toUpperCase()} ---- ${response.data}.`,
-                data: response,
-              };
-              throw new Error(`${this.coin} - Error sending raw transaction. Error  ${JSON.stringify(message)}`);
-            }
-          }).catch(error => {
-            throw new Error(`${this.coin} - Error sending raw transaction.`);
-          });
+        try {
+            return axios({
+                method: 'post',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                url: insightUrl,
+                data: {
+                    "rawtx": txHex
+                }
+              }).then(response => {
+                if (response.data.txid && response.status == 200) {
+                    return response.data.txid;
+                } else {
+                  let message = {
+                    message: `Error sending raw transaction: ${this.coin.toUpperCase()} ---- ${response.data}.`,
+                    data: response,
+                  };
+                  throw new Error(`${this.coin} - Error sending raw transaction. Error  ${JSON.stringify(message)}`);
+                }
+              }).catch(error => {
+                throw new Error(`${this.coin} - Error sending raw transaction. - ${error}`);
+              });
+        } catch(error) {
+            throw new Error(`${this.coin} - Error with request for sending transaction hex. - ${error}`);
+        }
     }
 }
 

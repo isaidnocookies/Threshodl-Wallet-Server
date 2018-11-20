@@ -193,55 +193,15 @@ class WalletRoutes {
                 res.status(200).send(JSON.stringify({ success: false, message: `${error}` }));
             });
         });
-        app.post('/wallets/send/', (req, res) => {
-            var coin = req.body.coin;
-            var network;
-            var fromAddress = req.body.fromAddress;
-            var fromPrivateKey = req.body.fromPrivateKey;
-            var toAddresses = req.body.toAddresses;
-            var toAmounts = req.body.toAmounts;
-            let api;
-            if (coin.charAt(0) === "t") {
-                network = 2;
-                coin = coin.substring(1, coin.length);
-            }
-            else {
-                network = 1;
-            }
-            switch (coin) {
-                case 'BTC':
-                    api = new BitcoinAPI_1.BitcoinAPI;
-                    break;
-                case 'LTC':
-                    api = new LitecoinAPI_1.LitecoinAPI;
-                    break;
-                case 'DASH':
-                    api = new DashAPI_1.DashAPI;
-                    break;
-                case 'ZEC':
-                    api = new ZCashAPI_1.ZCashAPI;
-                    break;
-                case 'DOGE':
-                    api = new DogecoinAPI_1.DogecoinAPI;
-                    break;
-                default:
-                    res.status(401).send(JSON.stringify({ success: false }));
-                    return;
-            }
-            api.send(network, fromAddress, fromPrivateKey, toAddresses, toAmounts).then(txReturn => {
-                // TODO : handle errors
-                res.status(200).send(JSON.stringify({ success: true, txid: txReturn }));
-            }).catch((error) => {
-                res.status(200).send(JSON.stringify({ success: false, message: `${error}` }));
-            });
-        });
         app.post('/wallets/createTransaction/', (req, res) => {
             var coin = req.body.coin;
             var network;
-            var fromAddress = req.body.fromAddress;
-            var fromPrivateKey = req.body.fromPrivateKey;
+            var fromAddresses = req.body.fromAddresses;
+            var fromPrivateKeys = req.body.fromPrivateKeys;
             var toAddresses = req.body.toAddresses;
             var toAmounts = req.body.toAmounts;
+            var returnAddress = req.body.returnAddress;
+            var fee = req.body.fee;
             var message = req.body.message;
             let api;
             if (coin.charAt(0) === "t") {
@@ -273,8 +233,10 @@ class WalletRoutes {
             }
             var lSuccess;
             var lReturn;
-            api.createTransactionHex(network, fromAddress, fromPrivateKey, toAddresses, toAmounts, message).then(txReturn => {
-                // TODO : handle errors
+            if (!fee) {
+                fee = "";
+            }
+            api.createTransactionHex(network, fromAddresses, fromPrivateKeys, toAddresses, toAmounts, returnAddress, fee, message).then(txReturn => {
                 lReturn = txReturn;
                 if (lReturn === "") {
                     lSuccess = false;
@@ -324,7 +286,6 @@ class WalletRoutes {
             var lSuccess;
             var lTxid;
             api.sendTransactionHex(network, rawTransactoinHex).then(txReturn => {
-                // TODO : handle errors
                 lTxid = txReturn;
                 if (lTxid === "") {
                     lSuccess = false;

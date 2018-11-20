@@ -11,6 +11,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const CryptoAPI_1 = require("./CryptoAPI");
 exports.Network = CryptoAPI_1.Network;
 const config_1 = require("../config/config");
+var StringMath = require('@isaidnocookies/StringMath');
 class LitecoinAPI extends CryptoAPI_1.CryptoAPI {
     constructor() {
         super(...arguments);
@@ -106,143 +107,168 @@ class LitecoinAPI extends CryptoAPI_1.CryptoAPI {
     getTransactionFee(chainType, inputs, outputs) {
         const axios = require('axios');
         var insightUrl;
+        var blockAmount = "4";
         if (chainType == 1) {
-            insightUrl = this.config.insightServers.btc.main;
+            insightUrl = this.config.insightServers.ltc.main;
         }
         else {
-            insightUrl = this.config.insightServers.btc.testnet;
+            insightUrl = this.config.insightServers.ltc.testnet;
         }
+        let defaultFee = 0.0001;
+        var transactionSize = (inputs * 180) + (outputs * 34) + 10; // bytes
         return axios({
             method: 'get',
-            url: insightUrl + "/utils/estimatefee?nbBlocks=2",
+            url: insightUrl + "/utils/estimatefee?nbBlocks=" + blockAmount,
             responseType: 'application/json'
         }).then(function (response) {
-            return "0.0005";
+            const responseKeys = Object.keys(response.data);
+            if (responseKeys.length != 1) {
+                return defaultFee;
+            }
+            var feeperkb = response.data[responseKeys[0]];
+            if (feeperkb <= 0) {
+                return defaultFee;
+            }
+            return (transactionSize * (feeperkb / 1000));
         }).catch(error => {
             console.log(error);
             return "-1";
         });
     }
-    createTransactionHex(chainType, fromAddress, fromPrivateKey, toAddresses, toAmounts, message) {
+    createTransactionHex(chainType, fromAddresses, fromPrivateKeys, toAddresses, toAmounts, returnAddress, fee, message) {
         return __awaiter(this, void 0, void 0, function* () {
-            var total = 0.0;
+            var outTotal = "0.00";
+            var inTotal = "0.00";
+            var inputs = [];
+            var lUtxos = [];
+            var inputCount = 0;
+            var thePrivateKeys = [];
+            var transactionFee;
+            var stringmath = new StringMath();
+            var dynamicFee = (fee === "") ? true : false;
             for (var i = 0; i < toAmounts.length; i++) {
-                total = total + (parseFloat(toAmounts[i]) / 0.00000001);
+                outTotal = stringmath.add(outTotal, toAmounts[i]);
             }
-            var feeEstimate = yield this.getTransactionFee(chainType, 2, 2);
-            return this.getUnspentTransactions(chainType, fromAddress, String(total)).then(utxos => {
-                if (utxos) {
-                    if (!fromPrivateKey || toAddresses.length <= 0 || toAddresses.length != toAmounts.length) {
-                        throw new Error(`${this.coin} - Error with send parameters.`);
-                    }
-                    var utxoTotal = 0;
-                    var lUtxos = [];
-                    for (var i = 0; i < utxos.length; i++) {
+            if (fromAddresses.length != fromPrivateKeys.length && toAddresses.length != toAmounts.length) {
+                throw new Error(`${this.coin} - Mismatch between input pairs (fromAddresses/fromPrivateKeys or toAddresses/toAmounts)`);
+            }
+            try {
+                for (var index = 0; index < fromAddresses.length; index++) {
+                    var addr = fromAddresses[index];
+                    var input = {};
+                    var unspentTransactions = yield this.getUnspentTransactions(chainType, addr, "NOTUSEDYET");
+                    input.utxos = unspentTransactions;
+                    input.addr = addr;
+                    input.privateKey = fromPrivateKeys[index];
+                    inputs.push(input);
+                    for (var i = 0; i < unspentTransactions.length; i++) {
                         var utxoIn = {
-                            "txId": utxos[i].txid,
-                            "outputIndex": utxos[i].vout,
-                            "address": utxos[i].address,
-                            "script": utxos[i].scriptPubKey,
-                            "satoshis": utxos[i].satoshis
+                            "txId": unspentTransactions[i].txid,
+                            "outputIndex": unspentTransactions[i].vout,
+                            "address": unspentTransactions[i].address,
+                            "script": unspentTransactions[i].scriptPubKey,
+                            "satoshis": unspentTransactions[i].satoshis
                         };
-                        utxoTotal = utxoTotal + parseFloat(utxos[i]);
-                        lUtxos[i] = utxoIn;
-                        if (utxoTotal > total + parseFloat(feeEstimate)) {
-                            // if we have enough utxos for the transaction, stop collecting them...
-                            break;
-                        }
+                        lUtxos.push(utxoIn);
+                        inputCount++;
+                        inTotal = stringmath.add(inTotal, unspentTransactions[i].amount.toString());
                     }
                     try {
-                        var transaction = new this.litecore.Transaction().from(lUtxos);
-                        var privateKey = new this.litecore.PrivateKey(fromPrivateKey);
+                        var privateKey = new this.litecore.PrivateKey(fromPrivateKeys[index]);
+                        thePrivateKeys.push(privateKey);
                     }
                     catch (_a) {
                         throw new Error(`${this.coin} - Error creating private key and transaction.`);
                     }
-                    console.log(" about to create transaction");
+                }
+                ;
+            }
+            catch (_b) {
+                throw new Error(`${this.coin} - Error with send parameters.`);
+            }
+            if (stringmath.isLessThanOrEqualTo(inTotal, outTotal)) {
+                throw new Error(`${this.coin} - Not enough for outputs and fees...`);
+            }
+            else {
+                try {
+                    var transaction = new this.litecore.Transaction().from(lUtxos);
                     for (var i = 0; i < toAddresses.length; i++) {
-                        let inAmount = Math.trunc(parseFloat(toAmounts[i]) / 0.00000001);
-                        transaction.to(toAddresses[i], inAmount);
+                        var outAmount = Math.trunc(parseFloat(toAmounts[i]) / 0.00000001);
+                        transaction.to(toAddresses[i], outAmount);
                     }
-                    return this.getTransactionFee(chainType, lUtxos.length, toAddresses.length).then(lfee => {
-                        var lTxFee = String(parseFloat(lfee) / 0.00000001);
-                        console.log("utxoTotal " + utxoTotal);
-                        console.log("total " + total);
-                        console.log("lfee " + lfee);
-                        if (parseFloat(lfee) + total > utxoTotal) {
-                            if ((utxoTotal - total) > 0 && ((utxoTotal - total) < parseFloat(lfee))) {
-                                lTxFee = String(utxoTotal - total);
-                            }
-                            else {
-                                throw new Error(`${this.coin} - Not enough to cover fees in transaction creation.`);
-                            }
+                    if (dynamicFee) {
+                        var calculatedTransactionFee = yield this.getTransactionFee(chainType, inputCount, toAddresses.length);
+                        transactionFee = calculatedTransactionFee.toString();
+                    }
+                    else {
+                        transactionFee = fee;
+                    }
+                    var paramDiff = stringmath.subtract(inTotal, outTotal);
+                    if (stringmath.isLessThan(paramDiff, transactionFee.toString())) {
+                        if (dynamicFee && toAddresses.length === 1) {
+                            transaction.clearOutputs();
+                            var newOutAmount = toAmounts[0];
+                            var somethingOrOther = stringmath.subtract(transactionFee, paramDiff);
+                            newOutAmount = stringmath.subtract(newOutAmount, somethingOrOther);
+                            var fuckingNewOutputMinusFee = Math.trunc(parseFloat(newOutAmount) / 0.00000001);
+                            transaction.to(toAddresses[0], fuckingNewOutputMinusFee);
                         }
-                        try {
-                            transaction.change(fromAddress);
-                            transaction.fee(parseFloat(lTxFee));
-                            if (message !== "") {
-                                transaction.addData(message);
-                            }
-                            transaction.sign(privateKey);
+                        else {
+                            throw new Error(`${this.coin} - Not enough left for fees...`);
                         }
-                        catch (_a) {
-                            throw new Error(`${this.coin} - Error signing raw transaction.`);
-                        }
-                        var txHex = transaction.toString();
-                        return ({ "txHex": txHex, "fee": lfee });
+                    }
+                    transaction.fee(Math.trunc(parseFloat(transactionFee) / 0.00000001));
+                    transaction.change(returnAddress);
+                    thePrivateKeys.forEach((pk) => {
+                        transaction.sign(pk);
                     });
                 }
-                else {
-                    throw new Error(`${this.coin} - Error creating raw transaction.`);
+                catch (error) {
+                    throw new Error("Failed to create transaction and sign transaction" + ` ${this.coin}` + `${error}`);
                 }
-            });
+            }
+            var txHex = transaction.toString();
+            return ({ "txHex": txHex, "fee": transactionFee });
         });
     }
     sendTransactionHex(chainType, txHex) {
         const axios = require('axios');
-        // var insightUrl : string;
-        var nodeUrl;
-        if (chainType == 1) {
-            nodeUrl = this.config.nodes.ltc.main;
+        var insightUrl;
+        console.log("Sending transaction... : " + txHex);
+        if (chainType === 1) {
+            insightUrl = this.config.insightServers.ltc.main + "/tx/send";
         }
         else {
-            nodeUrl = this.config.nodes.ltc.testnet;
+            insightUrl = this.config.insightServers.ltc.testnet + "/tx/send";
         }
-        return axios({
-            method: 'post',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            url: nodeUrl,
-            data: {
-                method: 'sendrawtransaction',
-                'params': [txHex]
-            }
-        }).then(response => {
-            if (response.data.result && response.data.result.error == null) {
-                return response.data.result;
-            }
-            else {
-                let message = {
-                    message: `Error sending raw transaction: ${this.coin.toUpperCase()} .`,
-                    data: response,
-                };
-                throw new Error(`${this.coin} - Error sending raw transaction. Error  ${JSON.stringify(message)}`);
-            }
-        }).catch(error => {
-            throw new Error(`${this.coin} - Error sending raw transaction.`);
-        });
-    }
-    send(chainType, fromAddress, fromPrivateKey, toAddresses, toAmounts) {
-        return this.createTransactionHex(chainType, fromAddress, fromPrivateKey, toAddresses, toAmounts, "").then(txhex => {
-            return this.sendTransactionHex(chainType, txhex).then(txid => {
-                return txid;
+        try {
+            return axios({
+                method: 'post',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                url: insightUrl,
+                data: {
+                    "rawtx": txHex
+                }
+            }).then(response => {
+                if (response.data.txid && response.status == 200) {
+                    return response.data.txid;
+                }
+                else {
+                    let message = {
+                        message: `Error sending raw transaction: ${this.coin.toUpperCase()} ---- ${response.data}.`,
+                        data: response,
+                    };
+                    throw new Error(`${this.coin} - Error sending raw transaction. Error  ${JSON.stringify(message)}`);
+                }
             }).catch(error => {
-                throw new Error(`${this.coin} - Error sending raw transaction.`);
+                throw new Error(`${this.coin} - Error sending raw transaction. - ${error}`);
             });
-        }).catch(error => {
-            throw new Error(`${this.coin} - Error creating raw transaction.`);
-        });
+        }
+        catch (error) {
+            throw new Error(`${this.coin} - Error with request for sending transaction hex. - ${error}`);
+        }
     }
 }
 exports.LitecoinAPI = LitecoinAPI;

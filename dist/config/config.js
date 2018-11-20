@@ -3,12 +3,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 class Config {
     constructor() {
         this.localEnvironment = true;
+        this.port = 3333;
         this.authentication = {
             password: "threshodlpassword"
         };
         this.db = {
             production: {
-                url: "mongodb+srv://thdlDev:pass123!@thdldev-pdprj.mongodb.net/thdlDev?retryWrites=true"
+                url: "mongodb://thdl:9msb6kvSlJz3elwLdJ9f@18.224.238.46/threshodl?retryWrites=true" // change to url or hostname __ use dns resolution
             },
             test: {
                 url: "mongodb://localhost/Threshodl"
@@ -38,19 +39,19 @@ class Config {
             doge: {
                 main: "",
                 testnet: "http://doge:388a74f00eb5a0064b57c5c048ccbb85@54.183.61.83:22556",
-            },
-            eth: {
-                host: "http://10.10.0.163:8545",
-                url: "http://10.10.0.163:8545",
-                networkId: 3,
-                networkName: "ropsten",
-                networkType: "testnet",
-                token: {
-                    ownerAddress: "0x83634a8eaadc34b860b4553e0daf1fac1cb43b1e",
-                    tokenContractAddress: "0x3e672122bfd3d6548ee1cc4f1fa111174e8465fb",
-                    migrateContractAddress: "0xa8ebf36b0a34acf98395bc5163103efc37621052"
-                }
             }
+            // eth:{
+            //     host:"http://10.10.0.163:8545",
+            //     url: "http://10.10.0.163:8545",
+            //     networkId: 3,
+            //     networkName: "ropsten",
+            //     networkType: "testnet",
+            //     token: {
+            //         ownerAddress: "0x83634a8eaadc34b860b4553e0daf1fac1cb43b1e",
+            //         tokenContractAddress: "0x3e672122bfd3d6548ee1cc4f1fa111174e8465fb",
+            //         migrateContractAddress: "0xa8ebf36b0a34acf98395bc5163103efc37621052"
+            //     }
+            // }
         };
         this.insightServers = {
             bch: {
@@ -59,7 +60,7 @@ class Config {
             },
             btc: {
                 main: "https://insight.bitpay.com/api",
-                testnet: "https://testnet.blockexplorer.com/api"
+                testnet: "https://test-insight.bitpay.com/api"
                 //testnet: "https://test-insight.bitpay.com/api",
             },
             dash: {
@@ -75,8 +76,6 @@ class Config {
                 testnet: "https://explorer.testnet.z.cash/api",
             },
             doge: {
-                // https://dogechain.info/api/blockchain_api
-                // https://chain.so/api/v2/get_address_balance/DOGETEST/2MsQug2PDbor2ndqYu9MxMij3MZFZ3EkGk9
                 main: "https://dogechain.info/api/v1",
                 testnet: "https://chain.so/api/v2",
             }
