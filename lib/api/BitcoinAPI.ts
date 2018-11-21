@@ -196,7 +196,7 @@ class BitcoinAPI extends CryptoAPI {
             throw new Error(`${this.coin} - Error with send parameters.`);
         }
 
-        if (stringmath.isLessThanOrEqualTo(inTotal, outTotal)) {
+        if (stringmath.isLessThan(inTotal, outTotal)) {
             throw new Error(`${this.coin} - Not enough for outputs and fees...`);
         } else {
             try {
