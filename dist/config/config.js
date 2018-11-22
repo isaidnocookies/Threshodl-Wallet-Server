@@ -53,7 +53,7 @@ class Config {
             //     }
             // }
         };
-        this.insightServers = {
+        this.blockExplorers = {
             bch: {
                 main: "https://bch-insight.bitpay.com/api",
                 testnet: "https://test-bch-insight.bitpay.com/api",

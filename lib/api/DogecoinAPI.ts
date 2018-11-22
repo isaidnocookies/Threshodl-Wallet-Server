@@ -1,8 +1,13 @@
 import { CryptoAPI, Network } from "./CryptoAPI";
+import { Config } from "../config/config";
+
+var StringMath = require('@isaidnocookies/StringMath');
 
 class DogecoinAPI extends CryptoAPI {
     
+    coin: string = "DOGE";
     network: Network;
+    config: any = new Config();
 
     createWallet(chainType : Network, seed : string) {
         
@@ -10,7 +15,39 @@ class DogecoinAPI extends CryptoAPI {
     }
 
     getBalance(chainType: Network, address : string) {
-        return "";
+        var blockExplorerUrl: string;
+        const axios = require('axios');
+
+        if (chainType == 1) {
+            blockExplorerUrl = this.config.blockExplorers.doge.main;
+
+            return axios({
+                method: 'get',
+                url: blockExplorerUrl + '/get_address_balance/DOGE/' + address,
+                responseType: 'application/json'
+            }).then(function (response) {
+                if (response.data.status !== "success") {
+                    throw new Error(`${this.coin} : network ${chainType} : Failed to poll balances`);
+                }
+                return ({ "confirmed": response.data.data.confirmed_balance, "unconfirmed": response.data.data.unconfirmed_balance });
+            }).catch(error => {
+                return ({ "confirmed": "-1", "unconfirmed": "-1" });
+            });
+        } else {
+            blockExplorerUrl = this.config.blockExplorers.doge.testnet;
+            return axios({
+                method: 'get',
+                url: blockExplorerUrl + '/get_address_balance/DOGETEST/' + address,
+                responseType: 'application/json'
+            }).then(function (response) {
+                if (response.data.status !== "success") {
+                    throw new Error(`${this.coin} : network ${chainType} : Failed to poll balances`);
+                }
+                return ({ "confirmed": response.data.data.confirmed_balance, "unconfirmed": response.data.data.unconfirmed_balance });
+            }).catch(error => {
+                return ({ "confirmed": "-1", "unconfirmed": "-1" });
+            });
+        }
     }
 
     getUnspentTransactions(chainType : Network, address: string, amount: string) {

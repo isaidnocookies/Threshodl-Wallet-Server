@@ -8,15 +8,13 @@ import { LitecoinAPI } from "../api/LitecoinAPI";
 import { DashAPI } from "../api/DashAPI";
 import { DogecoinAPI } from "../api/DogecoinAPI";
 
+var StringMath = require('@isaidnocookies/StringMath');
+
 export class WalletRoutes {
     public routes (app) : any {
         app.route('/wallets/').get((req: Request, res: Response) => {
             res.status(200).send({message: "Wallets api ping"})
         })
-
-        app.post('/wallets/testing/', (req: Request, res: Response) => {
-            res.status(200).send({message: "Wallet testing call"})
-        });
 
         app.post('/wallets/create/', (req: Request, res: Response) => {
             let api : CryptoAPI;
@@ -102,6 +100,7 @@ export class WalletRoutes {
             var address : string = req.body.address;
             var coin : string = req.body.coin;
             var network : number;
+            var stringmath = new StringMath();
 
             let api : CryptoAPI;
 
@@ -123,9 +122,21 @@ export class WalletRoutes {
                     return;
             }
 
-            api.getBalance(network, address).then(utxos => {
-                if (utxos) {
-                    res.status(200).send(JSON.stringify({success: true, response: JSON.stringify(utxos)}));
+            api.getBalance(network, address).then(balance => {
+                var returnBalance : any = balance;
+                if (balance && balance.confirmed !== -1) {
+                    if ((balance.confirmed.toString()).indexOf("e") >= 0) {
+                        returnBalance.confirmed = stringmath.sciToDecimal(balance.confirmed.toString());
+                    } else {
+                        returnBalance.confirmed = balance.confirmed.toString();
+                    }
+
+                    if ((balance.unconfirmed.toString()).indexOf("e") >= 0) {
+                        returnBalance.unconfirmed = stringmath.sciToDecimal(balance.unconfirmed.toString());
+                    } else {
+                        returnBalance.unconfirmed = balance.unconfirmed.toString();
+                    }
+                    res.status(200).send(JSON.stringify({ success: true, response: returnBalance}));
                 } else {
                     res.status(400).send(JSON.stringify({success: false}));
                 }

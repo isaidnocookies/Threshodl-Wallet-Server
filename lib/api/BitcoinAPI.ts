@@ -56,17 +56,17 @@ class BitcoinAPI extends CryptoAPI {
     }
 
     getBalance(chainType: Network, address : string) {
-        var insightUrl : string;
+        var blockExplorerUrl : string;
         if (chainType == 1) {
-            insightUrl = this.config.insightServers.btc.main;
+            blockExplorerUrl = this.config.blockExplorers.btc.main;
         } else {
-            insightUrl = this.config.insightServers.btc.testnet;
+            blockExplorerUrl = this.config.blockExplorers.btc.testnet;
         }
 
         const axios = require('axios');
         return axios({
             method: 'get',
-            url: insightUrl + '/addr/' + address,
+            url: blockExplorerUrl + '/addr/' + address,
             responseType: 'application/json'
         }).then(function(response) {
             return ({"confirmed" : response.data.balance, "unconfirmed": response.data.unconfirmedBalance});
@@ -81,17 +81,17 @@ class BitcoinAPI extends CryptoAPI {
 
     getUnspentTransactionsInternal(chainType : Network, address : string, amount : string, attempts : number) {
         const axios = require('axios');
-        var insightUrl : string;
+        var blockExplorerUrl : string;
 
         if (chainType == 1) {
-            insightUrl = this.config.insightServers.btc.main;
+            blockExplorerUrl = this.config.blockExplorers.btc.main;
         } else {
-            insightUrl = this.config.insightServers.btc.testnet;
+            blockExplorerUrl = this.config.blockExplorers.btc.testnet;
         }
 
         return axios({
             method:'get',
-            url:insightUrl + '/addr/' + address + "/utxo",
+            url:blockExplorerUrl + '/addr/' + address + "/utxo",
             responseType:'application/json'
         }).then(function(response) {
             return response.data;
@@ -107,12 +107,12 @@ class BitcoinAPI extends CryptoAPI {
     getTransactionFee(chainType: Network, inputs: number, outputs: number): any {
         const axios = require('axios');
 
-        var insightUrl : string;
+        var blockExplorerUrl : string;
         var blockAmount : string = "4";
         if (chainType == 1) {
-            insightUrl = this.config.insightServers.btc.main;
+            blockExplorerUrl = this.config.blockExplorers.btc.main;
         } else {
-            insightUrl = this.config.insightServers.btc.testnet;
+            blockExplorerUrl = this.config.blockExplorers.btc.testnet;
         }
 
         let defaultFee : number = 0.0001;
@@ -121,7 +121,7 @@ class BitcoinAPI extends CryptoAPI {
 
         return axios({
             method:'get',
-            url:insightUrl + "/utils/estimatefee?nbBlocks=" + blockAmount,
+            url:blockExplorerUrl + "/utils/estimatefee?nbBlocks=" + blockAmount,
             responseType:'application/json'
         }).then(function(response) {
             const responseKeys : any = Object.keys(response.data);
@@ -228,10 +228,11 @@ class BitcoinAPI extends CryptoAPI {
                         throw new Error(`${this.coin} - Not enough left for fees...`);
                     }
                 }
-    
+
+                
                 transaction.fee(Math.trunc(parseFloat(transactionFee) / 0.00000001));
                 transaction.change(returnAddress);
-                
+
                 thePrivateKeys.forEach((pk) => {
                     transaction.sign(pk);
                 });
@@ -247,13 +248,13 @@ class BitcoinAPI extends CryptoAPI {
     sendTransactionHex(chainType: Network, txHex : string) {
         const axios = require('axios');
 
-        var insightUrl : string;
+        var blockExplorerUrl : string;
         console.log("Sending transaction... : " + txHex);
 
         if (chainType === 1) {
-            insightUrl = this.config.insightServers.btc.main + "/tx/send";
+            blockExplorerUrl = this.config.blockExplorers.btc.main + "/tx/send";
         } else {
-            insightUrl = this.config.insightServers.btc.testnet + "/tx/send";
+            blockExplorerUrl = this.config.blockExplorers.btc.testnet + "/tx/send";
         }
         try {
             return axios({
@@ -261,7 +262,7 @@ class BitcoinAPI extends CryptoAPI {
                 headers: {
                   'Content-Type': 'application/json'
                 },
-                url: insightUrl,
+                url: blockExplorerUrl,
                 data: {
                     "rawtx": txHex
                 }

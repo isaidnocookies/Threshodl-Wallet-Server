@@ -13,7 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@isaidnocookies/stringmath": "^1.1.1",
+    "@isaidnocookies/stringmath": "^1.2.1",
     "@types/express": "^4.16.0",
     "axios": "^0.18.0",
     "bitcoinjs-lib": "^3.3.2",

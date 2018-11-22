@@ -56,7 +56,7 @@ export class Config
         // }
     };
 
-    insightServers = {
+    blockExplorers = {
         bch:{
             main: "https://bch-insight.bitpay.com/api",
             testnet: "https://test-bch-insight.bitpay.com/api",
@@ -64,22 +64,21 @@ export class Config
         btc:{
             main: "https://insight.bitpay.com/api",
             testnet: "https://test-insight.bitpay.com/api"
-            //testnet: "https://test-insight.bitpay.com/api",
         },
         dash:{
             main: "https://insight.dash.org/insight-api",
-            testnet: "https://test.insight.dash.siampm.com/api",
+            testnet: "https://chain.so/api/v2"
         },
         ltc:{
             main: "https://insight.litecore.io/api",
-            testnet: "https://testnet.litecore.io/api",
+            testnet: "https://chain.so/api/v2"
         },
         zec:{
             main: "https://zcashnetwork.info/api",
-            testnet: "https://explorer.testnet.z.cash/api",
+            testnet: "https://chain.so/api/v2"
         },
         doge:{
-            main: "https://dogechain.info/api/v1",
+            main: "https://chain.so/api/v2",
             testnet: "https://chain.so/api/v2",
         }
     };

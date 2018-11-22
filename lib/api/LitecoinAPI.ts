@@ -55,23 +55,37 @@ class LitecoinAPI extends CryptoAPI {
     }
 
     getBalance(chainType: Network, address : string) {
-        var insightUrl : string;
+        var blockExplorerUrl : string;
+        const axios = require('axios');
+        
         if (chainType == 1) {
-            insightUrl = this.config.insightServers.ltc.main;
+            blockExplorerUrl = this.config.blockExplorers.ltc.main;
+            return axios({
+                method:'get',
+                url:blockExplorerUrl + '/addr/' + address,
+                responseType:'application/json'
+            }).then(function(response) {
+                return ({"confirmed" : response.data.balance, "unconfirmed": response.data.unconfirmedBalance});
+            }).catch(error => {
+                return ({"confirmed" : "-1", "unconfirmed" : "-1" });
+            });
         } else {
-            insightUrl = this.config.insightServers.ltc.testnet;
+            // TESTNET USES SOCHAIN INSTEAD OF TRADITIONAL INSIGHT APIS
+            blockExplorerUrl = this.config.blockExplorers.ltc.testnet;
+            return axios({
+                method: 'get',
+                url: blockExplorerUrl + '/get_address_balance/LTCTEST/' + address,
+                responseType: 'application/json'
+            }).then(function (response) {
+                if (response.data.status !== "success") {
+                    throw new Error(`${this.coin} : network ${chainType} : Failed to poll balances`);
+                }
+                return ({ "confirmed": response.data.data.confirmed_balance, "unconfirmed": response.data.data.unconfirmed_balance });
+            }).catch(error => {
+                return ({ "confirmed": "-1", "unconfirmed": "-1" });
+            });
         }
 
-        const axios = require('axios');
-        return axios({
-            method:'get',
-            url:insightUrl + '/addr/' + address,
-            responseType:'application/json'
-        }).then(function(response) {
-            return ({"confirmed" : response.data.balance, "unconfirmed": response.data.unconfirmedBalance});
-        }).catch(error => {
-            return ({"confirmed" : "-1", "unconfirmed" : "-1" });
-        });
     }
 
     getUnspentTransactions(chainType : Network, address : string, amount : string) {
@@ -80,17 +94,17 @@ class LitecoinAPI extends CryptoAPI {
 
     getUnspentTransactionsInternal(chainType : Network, address : string, amount : string, attempts : number) {
         const axios = require('axios');
-        var insightUrl : string;
+        var blockExplorerUrl : string;
 
         if (chainType == 1) {
-            insightUrl = this.config.insightServers.ltc.main;
+            blockExplorerUrl = this.config.blockExplorers.ltc.main;
         } else {
-            insightUrl = this.config.insightServers.ltc.testnet;
+            blockExplorerUrl = this.config.blockExplorers.ltc.testnet;
         }
 
         return axios({
             method:'get',
-            url:insightUrl + '/addr/' + address + "/utxo",
+            url:blockExplorerUrl + '/addr/' + address + "/utxo",
             responseType:'application/json'
         }).then(function(response) {
             return response.data;
@@ -106,12 +120,12 @@ class LitecoinAPI extends CryptoAPI {
     getTransactionFee(chainType: Network, inputs: number, outputs: number): any {
         const axios = require('axios');
 
-        var insightUrl: string;
+        var blockExplorerUrl: string;
         var blockAmount: string = "4";
         if (chainType == 1) {
-            insightUrl = this.config.insightServers.ltc.main;
+            blockExplorerUrl = this.config.blockExplorers.ltc.main;
         } else {
-            insightUrl = this.config.insightServers.ltc.testnet;
+            blockExplorerUrl = this.config.blockExplorers.ltc.testnet;
         }
 
         let defaultFee: number = 0.0001;
@@ -120,7 +134,7 @@ class LitecoinAPI extends CryptoAPI {
 
         return axios({
             method: 'get',
-            url: insightUrl + "/utils/estimatefee?nbBlocks=" + blockAmount,
+            url: blockExplorerUrl + "/utils/estimatefee?nbBlocks=" + blockAmount,
             responseType: 'application/json'
         }).then(function (response) {
             const responseKeys: any = Object.keys(response.data);
@@ -246,13 +260,13 @@ class LitecoinAPI extends CryptoAPI {
     sendTransactionHex(chainType: Network, txHex : string) {
         const axios = require('axios');
 
-        var insightUrl: string;
+        var blockExplorerUrl: string;
         console.log("Sending transaction... : " + txHex);
 
         if (chainType === 1) {
-            insightUrl = this.config.insightServers.ltc.main + "/tx/send";
+            blockExplorerUrl = this.config.blockExplorers.ltc.main + "/tx/send";
         } else {
-            insightUrl = this.config.insightServers.ltc.testnet + "/tx/send";
+            blockExplorerUrl = this.config.blockExplorers.ltc.testnet + "/tx/send";
         }
         try {
             return axios({
@@ -260,7 +274,7 @@ class LitecoinAPI extends CryptoAPI {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                url: insightUrl,
+                url: blockExplorerUrl,
                 data: {
                     "rawtx": txHex
                 }
