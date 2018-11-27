@@ -87,7 +87,7 @@ export class WalletRoutes {
 
             api.getUnspentTransactions(network, address, amount).then(utxos => {
                 if (utxos) {
-                    res.status(200).send(JSON.stringify({success: true, response: JSON.stringify(utxos)}));
+                    res.status(200).send(JSON.stringify({success: true, response: utxos}));
                 } else {
                     res.status(400).send(JSON.stringify({success: false}));
                 }
