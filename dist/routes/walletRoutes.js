@@ -5,13 +5,11 @@ const ZCashAPI_1 = require("../api/ZCashAPI");
 const LitecoinAPI_1 = require("../api/LitecoinAPI");
 const DashAPI_1 = require("../api/DashAPI");
 const DogecoinAPI_1 = require("../api/DogecoinAPI");
+var StringMath = require('@isaidnocookies/StringMath');
 class WalletRoutes {
     routes(app) {
         app.route('/wallets/').get((req, res) => {
             res.status(200).send({ message: "Wallets api ping" });
-        });
-        app.post('/wallets/testing/', (req, res) => {
-            res.status(200).send({ message: "Wallet testing call" });
         });
         app.post('/wallets/create/', (req, res) => {
             let api;
@@ -97,7 +95,7 @@ class WalletRoutes {
             }
             api.getUnspentTransactions(network, address, amount).then(utxos => {
                 if (utxos) {
-                    res.status(200).send(JSON.stringify({ success: true, response: JSON.stringify(utxos) }));
+                    res.status(200).send(JSON.stringify({ success: true, response: utxos }));
                 }
                 else {
                     res.status(400).send(JSON.stringify({ success: false }));
@@ -110,6 +108,7 @@ class WalletRoutes {
             var address = req.body.address;
             var coin = req.body.coin;
             var network;
+            var stringmath = new StringMath();
             let api;
             if (coin.charAt(0) === "t") {
                 network = 2;
@@ -138,9 +137,22 @@ class WalletRoutes {
                     res.status(401).send(JSON.stringify({ success: false }));
                     return;
             }
-            api.getBalance(network, address).then(utxos => {
-                if (utxos) {
-                    res.status(200).send(JSON.stringify({ success: true, response: JSON.stringify(utxos) }));
+            api.getBalance(network, address).then(balance => {
+                var returnBalance = balance;
+                if (balance && balance.confirmed !== -1) {
+                    if ((balance.confirmed.toString()).indexOf("e") >= 0) {
+                        returnBalance.confirmed = stringmath.sciToDecimal(balance.confirmed.toString());
+                    }
+                    else {
+                        returnBalance.confirmed = balance.confirmed.toString();
+                    }
+                    if ((balance.unconfirmed.toString()).indexOf("e") >= 0) {
+                        returnBalance.unconfirmed = stringmath.sciToDecimal(balance.unconfirmed.toString());
+                    }
+                    else {
+                        returnBalance.unconfirmed = balance.unconfirmed.toString();
+                    }
+                    res.status(200).send(JSON.stringify({ success: true, response: returnBalance }));
                 }
                 else {
                     res.status(400).send(JSON.stringify({ success: false }));
@@ -233,7 +245,7 @@ class WalletRoutes {
             }
             var lSuccess;
             var lReturn;
-            if (!fee) {
+            if (!fee || fee === "-1") {
                 fee = "";
             }
             api.createTransactionHex(network, fromAddresses, fromPrivateKeys, toAddresses, toAmounts, returnAddress, fee, message).then(txReturn => {

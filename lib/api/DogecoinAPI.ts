@@ -56,7 +56,9 @@ class DogecoinAPI extends CryptoAPI {
     }
 
     getTransactionFee(chainType: Network, inputs: number, outputs: number): string {
-        throw new Error("Method not implemented.");
+        // TODO
+        console.log(`Error getting ${this.coin} transaction fee - returning default`);
+        return this.config.defaultFees.defaultFees;
     }
 
     createTransactionHex(network: Network, fromAddress: string[], fromPrivateKey: string[], toAddresses: string[], toAmounts: string[], returnAddress: string, fee : string, message: string) {

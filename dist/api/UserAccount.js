@@ -105,21 +105,21 @@ class UserAccount {
     }
     changeUsername(iPublicKey, iNewUsername) {
         return __awaiter(this, void 0, void 0, function* () {
-            var UserAccountObject = mongoose.model('MicroWalletObject', userAccountModel_1.UserAccountSchema);
+            var UserAccountObject = mongoose.model('UserAccountObject', userAccountModel_1.UserAccountSchema);
             var newUsername = iNewUsername.toLowerCase();
-            return yield UserAccountObject.find({ publickey: iPublicKey }).then((query, err) => {
-                if (query === null) {
-                    console.log("Transfer failed. Public Key not found..  Error: " + err);
-                    return false;
-                }
-                else {
-                    query[0].username = newUsername;
-                    return query[0].save().then(() => {
+            return yield UserAccountObject.find({ publickey: iPublicKey }).then(docs => {
+                if (docs.length !== 0) {
+                    docs[0].username = newUsername;
+                    return docs[0].save().then(() => {
                         return true;
                     }).catch(() => {
                         console.log("caught by change username....");
                         return false;
                     });
+                }
+                else {
+                    console.log("Transfer failed. Public Key not found..  Error..");
+                    return false;
                 }
             });
         });

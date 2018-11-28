@@ -132,8 +132,8 @@ class BitcoinAPI extends CryptoAPI_1.CryptoAPI {
             }
             return (transactionSize * (feeperkb / 1000));
         }).catch(error => {
-            console.log(error);
-            return "-1";
+            console.log(`Error getting ${this.coin} transaction fee - returning default`);
+            return this.config.defaultFees.btc;
         });
     }
     createTransactionHex(chainType, fromAddresses, fromPrivateKeys, toAddresses, toAmounts, returnAddress, fee, message) {
@@ -187,7 +187,7 @@ class BitcoinAPI extends CryptoAPI_1.CryptoAPI {
             catch (_b) {
                 throw new Error(`${this.coin} - Error with send parameters.`);
             }
-            if (stringmath.isLessThanOrEqualTo(inTotal, outTotal)) {
+            if (stringmath.isLessThan(inTotal, outTotal)) {
                 throw new Error(`${this.coin} - Not enough for outputs and fees...`);
             }
             else {

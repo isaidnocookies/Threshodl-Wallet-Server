@@ -216,7 +216,7 @@ export class WalletRoutes {
             var lSuccess: boolean;
             var lReturn: string;
 
-            if (!fee) {
+            if (!fee || fee === "-1") {
                 fee = "";
             }
 

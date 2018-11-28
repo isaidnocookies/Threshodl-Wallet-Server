@@ -60,23 +60,36 @@ class DashAPI extends CryptoAPI_1.CryptoAPI {
         return ({ "address": newAddress, "privateKey": newPrivateKey, "wif": newWif, "fromSeed": fromSeed });
     }
     getBalance(chainType, address) {
+        const axios = require('axios');
         var blockExplorerUrl;
         if (chainType == 1) {
             blockExplorerUrl = this.config.blockExplorers.dash.main;
+            return axios({
+                method: 'get',
+                url: blockExplorerUrl + '/addr/' + address,
+                responseType: 'application/json'
+            }).then(function (response) {
+                return ({ "confirmed": response.data.balance, "unconfirmed": response.data.unconfirmedBalance });
+            }).catch(error => {
+                return ({ "confirmed": "-1", "unconfirmed": "-1" });
+            });
         }
         else {
+            // TESTNET USES SOCHAIN INSTEAD OF TRADITIONAL INSIGHT APIS
             blockExplorerUrl = this.config.blockExplorers.dash.testnet;
+            return axios({
+                method: 'get',
+                url: blockExplorerUrl + '/get_address_balance/DASHTEST/' + address,
+                responseType: 'application/json'
+            }).then(function (response) {
+                if (response.data.status !== "success") {
+                    throw new Error(`${this.coin} : network ${chainType} : Failed to poll balances`);
+                }
+                return ({ "confirmed": response.data.data.confirmed_balance, "unconfirmed": response.data.data.unconfirmed_balance });
+            }).catch(error => {
+                return ({ "confirmed": "-1", "unconfirmed": "-1" });
+            });
         }
-        const axios = require('axios');
-        return axios({
-            method: 'get',
-            url: blockExplorerUrl + '/addr/' + address,
-            responseType: 'application/json'
-        }).then(function (response) {
-            return ({ "confirmed": response.data.balance, "unconfirmed": response.data.unconfirmedBalance });
-        }).catch(error => {
-            return ({ "confirmed": "-1", "unconfirmed": "-1" });
-        });
     }
     getUnspentTransactions(chainType, address, amount) {
         return this.getUnspentTransactionsInternal(chainType, address, amount, 3);
@@ -131,8 +144,8 @@ class DashAPI extends CryptoAPI_1.CryptoAPI {
             }
             return (transactionSize * (feeperkb / 1000));
         }).catch(error => {
-            console.log(error);
-            return "-1";
+            console.log(`Error getting ${this.coin} transaction fee - returning default`);
+            return this.config.defaultFees.dash;
         });
     }
     createTransactionHex(chainType, fromAddresses, fromPrivateKeys, toAddresses, toAmounts, returnAddress, fee, message) {

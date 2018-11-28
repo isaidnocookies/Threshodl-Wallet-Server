@@ -120,8 +120,8 @@ class ZCashAPI extends CryptoAPI {
 
             return (transactionSize * (feeperkb / 1000));
         }).catch(error => {
-            console.log(error);
-            return "-1";
+            console.log(`Error getting ${this.coin} transaction fee - returning default`);
+            return this.config.defaultFees.zec;
         });
     }
 

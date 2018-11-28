@@ -69,6 +69,7 @@ class DarkRoutes {
             }
             api.getTransactionFee(network, 1, breakEstimation).then(ifee => {
                 var fee = stringMath.roundUpToNearest0001(ifee);
+                console.log("Rounded fee: " + fee + "     Old Fee: " + ifee);
                 amountMinusFee = stringMath.subtract(amount, fee);
                 walletValues = darkWallet.getBreakValues(amountMinusFee);
                 for (var i = 0; i < walletValues.length; i++) {
@@ -98,10 +99,10 @@ class DarkRoutes {
                     var uid = darkWallet.getMicroWalletUID(wallet.address, coin);
                     walletReturn[i] = { address: wallet.address, uniqueid: uid, privateKey: splitKeys.user, value: walletValues[i] };
                     creatorApi = null;
-                    if (!darkWallet.saveMicroWallet(ownerId, uid, splitKeys.server, splitKeys.user)) {
-                        res.status(200).send({ success: false });
-                        return;
-                    }
+                    // if (!darkWallet.saveMicroWallet(ownerId, uid, splitKeys.server, splitKeys.user)) {
+                    //     res.status(200).send({success: false});
+                    //     return;
+                    // }
                 }
                 res.status(200).send({ success: true, fee: fee, coin: (coinPrefix + coin), wallets: walletReturn });
             });

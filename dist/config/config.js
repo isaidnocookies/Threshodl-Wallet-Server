@@ -40,18 +40,6 @@ class Config {
                 main: "",
                 testnet: "http://doge:388a74f00eb5a0064b57c5c048ccbb85@54.183.61.83:22556",
             }
-            // eth:{
-            //     host:"http://10.10.0.163:8545",
-            //     url: "http://10.10.0.163:8545",
-            //     networkId: 3,
-            //     networkName: "ropsten",
-            //     networkType: "testnet",
-            //     token: {
-            //         ownerAddress: "0x83634a8eaadc34b860b4553e0daf1fac1cb43b1e",
-            //         tokenContractAddress: "0x3e672122bfd3d6548ee1cc4f1fa111174e8465fb",
-            //         migrateContractAddress: "0xa8ebf36b0a34acf98395bc5163103efc37621052"
-            //     }
-            // }
         };
         this.blockExplorers = {
             bch: {
@@ -61,24 +49,32 @@ class Config {
             btc: {
                 main: "https://insight.bitpay.com/api",
                 testnet: "https://test-insight.bitpay.com/api"
-                //testnet: "https://test-insight.bitpay.com/api",
             },
             dash: {
                 main: "https://insight.dash.org/insight-api",
-                testnet: "https://test.insight.dash.siampm.com/api",
+                testnet: "https://chain.so/api/v2"
             },
             ltc: {
                 main: "https://insight.litecore.io/api",
-                testnet: "https://testnet.litecore.io/api",
+                testnet: "https://chain.so/api/v2"
             },
             zec: {
                 main: "https://zcashnetwork.info/api",
-                testnet: "https://explorer.testnet.z.cash/api",
+                testnet: "https://chain.so/api/v2"
             },
             doge: {
-                main: "https://dogechain.info/api/v1",
+                main: "https://chain.so/api/v2",
                 testnet: "https://chain.so/api/v2",
             }
+        };
+        this.defaultFees = {
+            btc: "0.0005",
+            bch: "0.00005",
+            dash: "0.00001",
+            ltc: "0.0005",
+            zec: "0.0001",
+            eth: "0.001",
+            doge: "2"
         };
         this.externalapis = {
             taskserver: {

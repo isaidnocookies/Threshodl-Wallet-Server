@@ -96,10 +96,12 @@ class LitecoinAPI extends CryptoAPI {
         const axios = require('axios');
         var blockExplorerUrl : string;
 
+        //uses the chain.so endpoints
+
         if (chainType == 1) {
             blockExplorerUrl = this.config.blockExplorers.ltc.main;
         } else {
-            blockExplorerUrl = this.config.blockExplorers.ltc.testnet;
+            blockExplorerUrl = this.config.blockExplorers.ltc.testnetInsight;
         }
 
         return axios({
@@ -125,7 +127,7 @@ class LitecoinAPI extends CryptoAPI {
         if (chainType == 1) {
             blockExplorerUrl = this.config.blockExplorers.ltc.main;
         } else {
-            blockExplorerUrl = this.config.blockExplorers.ltc.testnet;
+            blockExplorerUrl = this.config.blockExplorers.ltc.testnetInsight;
         }
 
         let defaultFee: number = 0.0001;
@@ -148,10 +150,14 @@ class LitecoinAPI extends CryptoAPI {
                 return defaultFee;
             }
 
-            return (transactionSize * (feeperkb / 1000));
+            var finalFee : number = (transactionSize * (feeperkb / 1000));
+            if (finalFee < 0.0001) {
+                return 0.0001;
+            }
+            return finalFee;
         }).catch(error => {
-            console.log(error);
-            return "-1";
+            console.log(`Error getting ${this.coin} transaction fee - returning default`);
+            return this.config.defaultFees.ltc;
         });
     }
     
@@ -265,34 +271,62 @@ class LitecoinAPI extends CryptoAPI {
 
         if (chainType === 1) {
             blockExplorerUrl = this.config.blockExplorers.ltc.main + "/tx/send";
+            try {
+                return axios({
+                    method: 'post',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    url: blockExplorerUrl,
+                    data: {
+                        "rawtx": txHex
+                    }
+                }).then(response => {
+                    if (response.data.txid && response.status == 200) {
+                        return response.data.txid;
+                    } else {
+                        let message = {
+                            message: `Error sending raw transaction: ${this.coin.toUpperCase()} ---- ${response.data}.`,
+                            data: response,
+                        };
+                        throw new Error(`${this.coin} - Error sending raw transaction. Error  ${JSON.stringify(message)}`);
+                    }
+                }).catch(error => {
+                    throw new Error(`${this.coin} - Error sending raw transaction. - ${error}`);
+                });
+            } catch (error) {
+                throw new Error(`${this.coin} - Error with request for sending transaction hex. - ${error}`);
+            }
         } else {
-            blockExplorerUrl = this.config.blockExplorers.ltc.testnet + "/tx/send";
-        }
-        try {
-            return axios({
-                method: 'post',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                url: blockExplorerUrl,
-                data: {
-                    "rawtx": txHex
-                }
-            }).then(response => {
-                if (response.data.txid && response.status == 200) {
-                    return response.data.txid;
-                } else {
-                    let message = {
-                        message: `Error sending raw transaction: ${this.coin.toUpperCase()} ---- ${response.data}.`,
-                        data: response,
-                    };
-                    throw new Error(`${this.coin} - Error sending raw transaction. Error  ${JSON.stringify(message)}`);
-                }
-            }).catch(error => {
-                throw new Error(`${this.coin} - Error sending raw transaction. - ${error}`);
-            });
-        } catch (error) {
-            throw new Error(`${this.coin} - Error with request for sending transaction hex. - ${error}`);
+            //use the chain.so api call
+            blockExplorerUrl = this.config.blockExplorers.ltc.testnet + "/send_tx/LTCTEST";
+            try {
+                return axios({
+                    method: 'post',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    url: blockExplorerUrl,
+                    data: {
+                        "tx_hex": txHex,
+                        "network" : "LTCTEST"
+                    }
+                }).then(response => {
+                    if (response.data.txid && response.status == 200) {
+                        return response.data.txid;
+                    } else {
+                        let message = {
+                            message: `Error sending raw transaction: ${this.coin.toUpperCase()} ---- ${response.data}.`,
+                            data: response,
+                        };
+                        throw new Error(`${this.coin} - Error sending raw transaction. Error  ${JSON.stringify(message)}`);
+                    }
+                }).catch(error => {
+                    throw new Error(`${this.coin} - Error sending raw transaction. - ${error}`);
+                });
+            } catch (error) {
+                throw new Error(`${this.coin} - Error with request for sending transaction hex. - ${error}`);
+            }
         }
     }
 }

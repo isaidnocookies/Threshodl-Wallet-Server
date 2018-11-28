@@ -2,7 +2,6 @@ import { Request, Response } from 'express'
 
 import { DarkWallet } from '../api/DarkWalletAPI';
 import { UserAccount } from '../api/UserAccount';
-import { StringMath } from '../api/StringMath';
 import { CryptoAPI } from "../api/CryptoAPI";
 
 import { BitcoinAPI } from "../api/BitcoinAPI";
@@ -10,6 +9,8 @@ import { ZCashAPI } from "../api/ZCashAPI";
 import { LitecoinAPI } from "../api/LitecoinAPI";
 import { DashAPI } from "../api/DashAPI";
 import { DogecoinAPI } from "../api/DogecoinAPI";
+
+var StringMath = require('@isaidnocookies/StringMath');
 
 export class DarkRoutes {
     public routes (app) : any {
@@ -23,7 +24,7 @@ export class DarkRoutes {
 
         app.post('/dark/createWallets/', (req: Request, res: Response) => {
             var darkWallet : DarkWallet = new DarkWallet();
-            var stringMath : StringMath = new StringMath();
+            var stringmath = new StringMath();
             var coin : string = req.body.coin;
             var amount : string = req.body.value;
             var ownerId : string = req.body.ownerId;
@@ -58,8 +59,9 @@ export class DarkRoutes {
             }
 
             api.getTransactionFee(network, 1, breakEstimation).then(ifee => {
-                var fee : string = stringMath.roundUpToNearest0001(ifee);
-                amountMinusFee = stringMath.subtract(amount, fee);
+                var fee: string = stringmath.roundUpToNearest0001(ifee);
+                
+                amountMinusFee = stringmath.subtract(amount, fee);
                 walletValues = darkWallet.getBreakValues(amountMinusFee);
     
                 for (var i = 0; i < walletValues.length; i++) {
