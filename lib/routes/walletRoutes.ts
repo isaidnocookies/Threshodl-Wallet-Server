@@ -1,12 +1,12 @@
 import { Request, Response } from 'express';
 
 import { CryptoAPI } from "../api/CryptoAPI";
-
 import { BitcoinAPI } from "../api/BitcoinAPI";
 import { ZCashAPI } from "../api/ZCashAPI";
 import { LitecoinAPI } from "../api/LitecoinAPI";
 import { DashAPI } from "../api/DashAPI";
 import { DogecoinAPI } from "../api/DogecoinAPI";
+import { EthereumAPI } from "../api/EthereumAPI";
 
 var StringMath = require('@isaidnocookies/StringMath');
 
@@ -112,11 +112,12 @@ export class WalletRoutes {
             }
 
             switch(coin) {
-                case 'BTC': api = new BitcoinAPI; break;
-                case 'LTC': api = new LitecoinAPI; break;
+                case 'BTC' : api = new BitcoinAPI; break;
+                case 'LTC' : api = new LitecoinAPI; break;
                 case 'DASH': api = new DashAPI; break;
-                case 'ZEC': api = new ZCashAPI; break;
+                case 'ZEC' : api = new ZCashAPI; break;
                 case 'DOGE': api = new DogecoinAPI; break;
+                case 'ETH' : api = new EthereumAPI; break;
                 default:
                     res.status(401).send(JSON.stringify({success: false}));
                     return;

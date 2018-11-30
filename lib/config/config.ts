@@ -72,6 +72,15 @@ export class Config
         }
     };
 
+    infura = {
+        mainnet: "https://mainnet.infura.io/v3/18db721732b14bb6bec06f6038707487",
+        ropsten: "https://ropsten.infura.io/v3/18db721732b14bb6bec06f6038707487",
+        kovan: "https://kovan.infura.io/v3/18db721732b14bb6bec06f6038707487",
+        rinkeby: "https://rinkeby.infura.io/v3/18db721732b14bb6bec06f6038707487",
+        projectSecret: "62854274cffa4fe59d981eb47514b952",
+        projectID: "18db721732b14bb6bec06f6038707487"
+    }
+
     defaultFees = {
         btc: "0.0005",
         bch: "0.00005",

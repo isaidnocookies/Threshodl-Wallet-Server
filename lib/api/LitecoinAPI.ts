@@ -85,7 +85,6 @@ class LitecoinAPI extends CryptoAPI {
                 return ({ "confirmed": "-1", "unconfirmed": "-1" });
             });
         }
-
     }
 
     getUnspentTransactions(chainType : Network, address : string, amount : string) {
@@ -300,7 +299,9 @@ class LitecoinAPI extends CryptoAPI {
         } else {
             //use the chain.so api call
             blockExplorerUrl = this.config.blockExplorers.ltc.testnet + "/send_tx/LTCTEST";
+            
             try {
+                console.log("Sending Transaction...");
                 return axios({
                     method: 'post',
                     headers: {
@@ -308,12 +309,11 @@ class LitecoinAPI extends CryptoAPI {
                     },
                     url: blockExplorerUrl,
                     data: {
-                        "tx_hex": txHex,
-                        "network" : "LTCTEST"
+                        "tx_hex": txHex
                     }
                 }).then(response => {
-                    if (response.data.txid && response.status == 200) {
-                        return response.data.txid;
+                    if (response.data.status === "success") {
+                        return response.data.data.txid;
                     } else {
                         let message = {
                             message: `Error sending raw transaction: ${this.coin.toUpperCase()} ---- ${response.data}.`,
