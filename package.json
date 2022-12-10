@@ -25,7 +25,7 @@
     "crypto": "^1.0.1",
     "dashcore-lib": "^8.2.3",
     "ethereumjs-tx": "^1.3.7",
-    "express": "^4.16.3",
+    "express": "^4.17.3",
     "express-force-ssl": "^0.3.2",
     "helmet": "^3.14.0",
     "http": "0.0.0",
